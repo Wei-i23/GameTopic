@@ -1,0 +1,169 @@
+<!DOCTYPE html> 
+<html>
+<head>
+  <title>Javascript Finite State Machine</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+  <link href="examples/demo/demo.css" media="screen, print" rel="stylesheet" type="text/css" /> 
+</head> 
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+</style>
+ 
+<body> 
+
+<div id="info">
+
+<h1> Finite State Machine </h1>
+
+<input type=range min=-50 max=150 value=-10 id='temp'> Temperature
+<p id='tempDisplay'></p>
+
+<!--
+<button id='melt'>melt</button>
+<button id='vaporize'>vaporize</button>
+<button id='freeze'>freeze</button>
+<button id='condense'>condense</button>
+-->
+
+</div>
+
+
+<script src="dist/state-machine.js"></script>
+<!-- script src="examples/demo/demo.js"></script-->
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+
+<script>
+/*
+$('#melt').click (function() {
+	fsm.melt();
+})
+$('#vaporize').click (function() {
+	fsm.vaporize();
+})
+$('#freeze').click (function() {
+	fsm.freeze();
+})
+$('#condense').click (function() {
+	fsm.condense();
+})
+*/
+
+$('#temp').change( function() {
+	
+	let thisTemp = $(this).val();
+	$('#tempDisplay').text ('Temp: ' + thisTemp);
+
+	// conditions to trigger events
+	
+	// melt
+	if (previousTemp < 0 && thisTemp > 0) fsm.melt();
+	
+	// freeze
+	if (previousTemp > 0 && thisTemp < 0) fsm.freeze();
+
+	// vaporize
+	if (previousTemp < 100 && thisTemp > 100) fsm.vaporize();
+	
+	// condense
+	if (previousTemp > 100 && thisTemp < 100) fsm.condense();
+/*
+	if (thisTemp < 0) fsm.freeze();
+	if (thisTemp > 0) fsm.melt();
+*/	
+	previousTemp = thisTemp;
+
+});
+
+var scene, camera, renderer;
+var meshes;
+var previousTemp = -10;
+
+var fsm;
+
+init();
+initFSM();
+
+animate();
+
+function initFSM () {
+ fsm = new StateMachine({
+    init: 'solid',
+    transitions: [
+      { name: 'melt',     from: 'solid',  to: 'liquid' },
+      { name: 'melt',     from: 'liquid', to: 'liquid'},
+      
+      { name: 'freeze',   from: 'liquid', to: 'solid'  },
+      { name: 'vaporize', from: 'liquid', to: 'gas'    },
+      { name: 'condense', from: 'gas',    to: 'liquid' }
+    ]
+  });
+  
+}
+
+function init() {
+	scene = new THREE.Scene();
+	camera = new THREE.OrthographicCamera (-20,20,20,-20,-10,10);
+	renderer = new THREE.WebGLRenderer();
+	renderer.clearColor (0x888888);
+	renderer.setSize (window.innerWidth, window.innerHeight);
+	document.body.appendChild (renderer.domElement);
+
+	grid = new THREE.GridHelper (40,10,'red','white');
+	scene.add (grid);
+	grid.rotation.x = -Math.PI/2;	
+	
+	///////////////////////////////////////////////////////////
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('');
+	
+	let mapIce = loader.load ('https://i.imgur.com/RmKDFxo.png');
+	let meshIce = new THREE.Mesh (new THREE.PlaneGeometry(5,5), new THREE.MeshBasicMaterial({map: mapIce}));
+	scene.add (meshIce);
+	let mapWater = loader.load ('https://i.imgur.com/iXbcACU.png');
+	let meshWater = new THREE.Mesh (new THREE.PlaneGeometry(5,5), new THREE.MeshBasicMaterial({map: mapWater}));
+	scene.add (meshWater);
+	let mapGas = loader.load ('https://i.imgur.com/kVxRoCv.png');
+	let meshGas = new THREE.Mesh (new THREE.PlaneGeometry(5,5), new THREE.MeshBasicMaterial({map: mapGas}));
+	scene.add (meshGas);
+
+	meshes = [meshIce, meshWater, meshGas];
+	
+	// poll state
+	setInterval (function() {
+		meshes.forEach (function(mesh) {mesh.material.visible = false});
+		
+		let state = fsm.state;
+		console.log (state);
+		
+		if (state == 'solid') meshes[0].material.visible = true; 
+		if (state == 'liquid') meshes[1].material.visible = true; 
+		if (state == 'gas') meshes[2].material.visible = true; 
+		
+	}, 500);
+		
+}
+
+function animate() {
+	requestAnimationFrame (animate);
+	render();	
+}
+
+function render() {
+	renderer.render(scene, camera);
+}
+</script>
+</body> 
+</html>

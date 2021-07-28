@@ -1,0 +1,196 @@
+<html>
+<head>
+	<style>
+		#info {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    color: #ffffff;
+	}
+
+	body {
+	overflow: hidden;
+	}
+	</style>
+</head>
+<body>
+<div id='info'>
+    <h1>Scene</h1>
+</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+var camera, scene, renderer;
+    
+init();
+animate();
+
+function init() {
+    
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set (0,200,200);
+
+    /*var gridXZ = new THREE.GridHelper(240, 24, 'red', 'white');
+    scene.add(gridXZ);*/
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x888888);
+
+	var pointLight = new THREE.PointLight(0xffffff);
+	pointLight.position.set(200,200,-100);
+	scene.add (pointLight);
+	
+    let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    document.body.appendChild(renderer.domElement);
+
+    /////////////////////////////////////////////////////////////////////
+    
+    paintBlackHole();
+    paintFloor();
+    buildHills();
+    buildFlag();
+	buildBucket();
+	buildWall()
+}
+function paintBlackHole(){
+    var loader = new THREE.TextureLoader();
+    var holeTexture = loader.load('https://i.imgur.com/8QHyueb.png');
+    var holeTexMat = new THREE.MeshBasicMaterial({
+        alphaTest:0.5,
+        map: holeTexture,
+        side: THREE.DoubleSide
+    });
+    var hole = new THREE.Mesh(new THREE.PlaneGeometry(100,100), holeTexMat);
+    var hole2 = new THREE.Mesh(new THREE.PlaneGeometry(100,100), holeTexMat);
+    hole.position.set(-190,30,0);
+    hole.rotation.y = Math.PI/2.5;
+    hole2.position.set(190,30,0);
+    hole2.rotation.y = -Math.PI/2.5;
+    scene.add(hole,hole2);
+}
+
+
+function paintFloor() {
+    
+    var loader = new THREE.TextureLoader;
+    loader.load('https://i.imgur.com/OYgMDzx.jpg', function (texture) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping; 
+        texture.repeat = new THREE.Vector2(3, 5); 
+            
+        var floorMaterial = new THREE.MeshBasicMaterial({map: texture, side: THREE.DoubleSide});
+            
+        var floorGeometry = new THREE.PlaneGeometry(400,240);
+            
+        var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            
+        floor.position.y = 0;
+        floor.rotation.x = Math.PI / 2;
+        scene.add(floor);
+    });
+}   
+
+function buildHills(){
+	let loader = new THREE.TextureLoader();
+    let hillTexture = loader.load('https://i.imgur.com/KTYARF6.jpg');
+    let hillTexMat = new THREE.MeshBasicMaterial({
+        alphaTest:0.5,
+        map: hillTexture,
+        side: THREE.DoubleSide
+    });
+	let geometry = new THREE.SphereGeometry( 15, 32, 32, 5, 6.3, 1, 2.9);
+    let hill	 = new THREE.Mesh( geometry, hillTexMat );
+    hill.rotation.x = Math.PI;
+    hill.position.y = -3;
+    let hillLeft = hill.clone();
+    hillLeft.position.x = -160;
+    let hillRight = hill.clone();
+    hillRight.position.x = 160;
+    
+    
+    scene.add(hill,hillLeft,hillRight);
+
+}
+
+function buildFlag(){
+	let flag = new THREE.Group();
+	let geometry = new THREE.BoxGeometry(1,1,40);
+	let material = new THREE.MeshBasicMaterial({color: 0x000000});
+	let box = new THREE.Mesh( geometry, material );
+	box.rotation.x = Math.PI/2;
+	box.position.y = 18;
+	let geometry1 = new THREE.PlaneGeometry(15,8);
+	let material1 = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
+	let plane = new THREE.Mesh(geometry1, material1);
+	plane.position.set(7.5,33,0);
+ 
+  
+	flag.add(box,plane);
+	scene.add(flag);
+}
+
+function buildBucket(){	//桶子	(有要隨機出現嗎?)
+	let loader = new THREE.TextureLoader();
+	loader.crossOrigin = '';
+	let texture = loader.load('https://i.imgur.com/XlAVV7B.jpg');
+
+	var texMat = new THREE.MeshBasicMaterial({
+		map: texture,
+		side: THREE.DoubleSide
+	});
+	let mesh = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 20,64), texMat);
+	let mesh2 = mesh.clone();
+	let mesh3 = mesh.clone();
+	let mesh4 = mesh.clone();
+	
+	scene.add(mesh,mesh2,mesh3,mesh4);
+	
+	mesh.position.set(-50,11,90);
+	mesh2.position.set(90,11,-50);
+	mesh3.position.set(30,11,50);
+	mesh4.position.set(-100,11,-50);
+}
+
+function buildWall(){
+	let loader = new THREE.TextureLoader();
+	loader.crossOrigin = '';
+	let texture = loader.load('https://i.imgur.com/YllBJ0q.jpg');
+
+	var texMat = new THREE.MeshBasicMaterial({
+		map: texture,
+		side: THREE.DoubleSide
+	});
+	let mesh = new THREE.Mesh(new THREE.BoxGeometry( 40, 30, 5 ),texMat);
+	mesh.rotation.y = Math.PI/2;
+	
+	let mesh2 = mesh.clone();
+	let mesh3 = mesh.clone();
+	
+	scene.add(mesh,mesh2,mesh3);
+	
+	mesh.position.set(-70,16,30);
+	mesh2.position.set(30,16,-50);
+	mesh3.position.set(100,16,60);
+}
+
+function animate() {
+    
+    requestAnimationFrame(animate);
+    render();
+    
+}
+
+function render() {
+    renderer.render(scene, camera);
+}
+
+</script>
+</body>
+</html>
