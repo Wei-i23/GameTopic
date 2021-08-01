@@ -1,0 +1,567 @@
+<html>
+<head>
+<style>
+#title {
+  position: absolute;
+  width: 100vw;
+  text-align: center;
+  color:yellow;
+
+}
+
+#info {
+  position: absolute;
+  width: 100vw;
+  text-align: center;
+  color:yellow;
+  bottom:0px;
+}
+
+body {
+  overflow: hidden;
+}
+
+
+</style>
+</head>
+<body>
+	<div id="title">	<br>
+	Protect-steer
+	</div>
+	<div id = "info">
+	<p id = 'defenseState'></p>
+	</div>
+
+<script src="state-machine.js"></script>	
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+<script>
+
+( function( ) {
+      Math.clamp = function(val,min,max) {
+          return Math.min(Math.max(val,min),max);
+      } 
+} )();
+
+class Obstacle {
+	constructor (center,size) {
+		this.center = center.clone();  
+		this.mesh = new THREE.Mesh (new THREE.CylinderGeometry(size,size,1,20),
+			new THREE.MeshBasicMaterial());
+		this.mesh.position.copy (center);
+		this.size = size;
+		scene.add (this.mesh);
+	}
+}
+
+class Avatar {
+	constructor(pos, mesh) {
+		this.pos = pos.clone();
+		this.vel = new THREE.Vector3();
+		this.force = new THREE.Vector3();
+		this.target = null;
+		this.size = 20;
+		this.mesh = mesh;
+		scene.add (mesh);
+		
+		this.MAXSPEED = 50;
+		this.ARRIVAL_R = 30;
+		this.nbhd = [];
+		
+		// for orientable agent
+		this.angle = 0;
+		this.steermode = '';
+		this.BRAKING = 0;
+	}
+  
+	update(dt) {
+		this.accumulateForce();
+		
+		// collision
+		// for all obstacles in the scene
+		let obs = scene.obstacles;
+
+		// pick the most threatening one
+		let theOne = null;
+		let dist = 1e10;
+		let vhat = this.vel.clone().normalize();
+		const REACH = 50
+		const K = 5
+		let perp;
+		for (let i = 0; i < obs.length; i++) {
+			let point = obs[i].center.clone().sub (this.pos) // c-p
+			let proj  = point.dot(vhat);
+			if (proj > 0 && proj < REACH) {
+				perp = new THREE.Vector3();
+				perp.subVectors (point, vhat.clone().setLength(proj));
+				let overlap = obs[i].size + this.size - perp.length()
+				if (overlap > 0 && proj < dist) {
+					theOne = obs[i]
+					dist = proj
+					perp.setLength (K*overlap);
+					perp.negate()
+				}
+			}
+		}
+		if (theOne)
+			this.force.add (perp);
+		
+		this.vel.add(this.force.clone().multiplyScalar(dt));
+
+		// ARRIVAL: velocity modulation
+		if (this.target !== null) {   
+			let diff = this.target.clone().sub(this.pos)
+			let dst = diff.length();
+			if (dst < this.ARRIVAL_R) {
+				this.vel.setLength(dst)
+			}
+		}
+    
+		// MAXSPEED modulation
+		let speed = this.vel.length()
+		this.vel.setLength(Math.clamp (speed, 0, this.MAXSPEED))
+		this.pos.add(this.vel.clone().multiplyScalar(dt))
+		this.mesh.position.copy(this.pos)
+    
+		// for orientable agent
+		// non PD version
+		if (this.vel.length() > 1.0) {
+	    	this.angle = Math.atan2 (-this.vel.z, this.vel.x)
+    		this.mesh.rotation.y = this.angle
+		}
+	}
+	
+	setSeekTarget (x,y,z) {
+		this.BRAKING = 0;
+		this.steerMode = 'SEEK';
+		this._setTarget (x,y,z);	
+	}
+ 
+	setFollowTarget (x,y,z) {
+		this.BRAKING = 0;
+		this.steerMode = 'FOLLOW';
+		this._setTarget (x,y,z);	
+	}
+	
+	/*
+	setFleeTarget (x,y,z) {
+		this.BRAKING = 0;
+		this.steerMode = 'FLEE';
+		this._setTarget (x,y,z);	
+	}*/
+	
+	
+	_setTarget(x,y,z) {
+		if (this.target !== null)
+			this.target.set(x,y,z);
+		else {
+			this.target = new THREE.Vector3(x,y,z);
+		}
+	}
+  
+	targetInducedForce(targetPos) { 
+		let sign = 0;
+		if(this.steerMode === 'FOLLOW' || this.steerMode === 'SEEK')
+			sign = 1;
+		else if(this.steerMode === 'FLEE')
+			sign = -1;
+	
+		return targetPos.clone().sub(this.pos).normalize().multiplyScalar(sign*this.MAXSPEED).sub(this.vel);
+	}
+	
+	setBrake (brake) {  // make the avatar stop gracefully
+		this.BRAKING = brake;  	
+		this.target = null;  // release target
+	}
+	
+	
+	distanceTo(otherAgent) {
+		return this.pos.distanceTo(otherAgent.pos)
+	}
+	addNbr(otherAgent) {
+		this.nbhd.push(otherAgent)
+	}
+	
+	accumulateForce() {
+		if (this.target) 
+			this.force.copy(this.targetInducedForce(this.target));
+	
+		else
+    	this.force.set (0,0,0);  // for null-target initial force
+    	
+		// braking ...
+		this.force.add (this.vel.clone().multiplyScalar(-this.BRAKING));
+		
+		 ////////////////////////////////////////
+		// group steer related
+		// separation
+		let push = new THREE.Vector3()
+		for (let i = 0; i < this.nbhd.length; i++) {
+			let point = this.pos.clone().sub(this.nbhd[i].pos);
+			push.add(point.setLength(40 / point.length()))
+		}
+		this.force.add(push);
+	}	
+
+}
+
+class Agent extends Avatar {
+	constructor (pos, mesh, name = '', fsm) {
+		super (pos, mesh);
+		this.fsm = fsm;
+		this.name = name;
+		// initial state got from fsm.state;
+		this.stateSign = null;
+	}
+   
+	update (dt) {
+   	
+		super.update (dt);  // calling avatar update
+		if(this.fsm){
+			$('#defenseState').text (this.fsm.state);
+			
+			if(this.fsm.state === 'follow'){
+				if(this.name === 'defR'){
+					let pointfR = capturer.mesh.localToWorld(new THREE.Vector3(-10,0,15));
+					super.setFollowTarget (pointfR.x,pointfR.y,pointfR.z);
+				}
+				else if(this.name === 'def'){
+					let pointf = capturer.mesh.localToWorld(new THREE.Vector3(-20,0,0));
+					super.setFollowTarget (pointf.x,pointf.y,pointf.z);
+				}
+				else if(this.name === 'defL'){
+					let pointfL = capturer.mesh.localToWorld(new THREE.Vector3(-10,0,-15));
+					super.setFollowTarget (pointfL.x,pointfL.y,pointfL.z);
+				}
+			}
+			if(this.fsm.state === 'defense'){
+				if(this.name === 'defR'){
+					let pointdR = capturer.mesh.localToWorld(new THREE.Vector3(15,0,15));
+					super.setFollowTarget (pointdR.x,pointdR.y,pointdR.z);
+				}
+				else if(this.name === 'def'){
+					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(-20,0,0));
+					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
+				}
+				else if(this.name === 'defL'){
+					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(15,0,-15));
+					super.setFollowTarget (pointdL.x,pointdL.y,pointdL.z);
+				}
+			}
+		}
+		//頭上的狀態
+		if(this.stateSign){
+			this.stateSign.position.copy(this.pos);
+			this.stateSign.position.y = 10;
+			this.stateSign.lookAt(camera.position.x,15,camera.position.z);
+			
+			if (this.fsm.state === 'follow') {
+				this.stateSign.children[0].material.visible = true;
+				this.stateSign.children[1].material.visible = false;
+			}
+			if (this.fsm.state === 'defense') {
+				this.stateSign.children[1].material.visible = true;
+				this.stateSign.children[0].material.visible = false;
+			}
+		}
+	}
+}
+
+function initFSM () {
+
+ let fsm = new StateMachine({
+    init: 'follow',
+    transitions: [
+      { name: 'attack',     from: 'follow',  to: 'defense' },
+	  { name: 'attack',     from: 'defense',  to: 'defense' },
+	  { name: 'noattack',     from: 'defense', to: 'follow'},
+	  { name: 'noattack',     from: 'follow', to: 'follow'},
+    ]
+  });
+  
+  return fsm; 
+}
+
+
+var camera, scene, renderer, clock;
+var raycaster;
+var mouse = new THREE.Vector2();
+var keyboard = new KeyboardState();
+var pickables = [],intersects;
+var agents = [];
+var capturer,defenseL,defense,defenseR,soldier;
+var targetMesh;
+
+var point;
+var stop = false;
+var angle = 0,path;
+
+init();
+animate();
+
+function SolMesh () {
+  
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin ('');
+
+	// 有方向性的圖案
+	let solTex = loader.load ('https://i.imgur.com/hHoSAbD.png');
+	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
+  
+	var soldier = new THREE.Group();
+	let solTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: solTex}));
+	solTop.rotation.x = -Math.PI/2;
+	solTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
+	solTop.position.y = 2.5;
+  
+	let solRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
+	soldier.add (solRing, solTop);
+  
+	soldier.position.y = 2.5;
+	return soldier;
+
+}
+
+function CapMesh () {
+  
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin ('');
+
+	// 有方向性的圖案
+	let capTex = loader.load ('https://i.imgur.com/1mBck1Y.jpg');
+	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
+  
+	var cap = new THREE.Group();
+	let capTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: capTex}));
+	capTop.rotation.x = -Math.PI/2;
+	capTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
+	capTop.position.y = 2.5;
+  
+	let capRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
+	cap.add (capRing, capTop);
+  
+	cap.position.y = 2.5;
+	return cap;
+
+}
+
+function DefMesh(){
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin ('');
+
+	// 有方向性的圖案
+	let defTex = loader.load ('https://i.imgur.com/HIbOSmd.png');
+	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
+  
+	var def = new THREE.Group();
+	let defTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: defTex}));
+	defTop.rotation.x = -Math.PI/2;
+	defTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
+	defTop.position.y = 2.5;
+  
+	let defRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
+	def.add (defRing, defTop);
+  
+	//scene.add (captain);
+	def.position.y = 2.5;
+	return def;
+}
+
+function stateSign () {
+	let loader = new THREE.TextureLoader();
+	let followMap = loader.load ("https://i.imgur.com/2JLo68s.png");
+	let defenseMap = loader.load ("https://i.imgur.com/wOHiQDl.png");
+	
+	let followMesh = new THREE.Mesh (new THREE.PlaneGeometry(20,15), new THREE.MeshBasicMaterial(
+		{map: followMap, transparent: true, alphaTest: 0, side:THREE.DoubleSide}));
+	let defenseMesh = new THREE.Mesh (new THREE.PlaneGeometry(20,15), new THREE.MeshBasicMaterial(
+		{map: defenseMap, transparent: true, alphaTest: 0, side:THREE.DoubleSide}));
+	let defenseStateSign = new THREE.Group();
+	defenseStateSign.add (followMesh,defenseMesh);
+	return defenseStateSign;
+}
+
+function findNbhd(agents) {
+	let i, j, dst;
+	let nAgents = agents.length;
+  
+  // 這樣的 double-for-loop對嗎？
+	agents.forEach(function(agent){agent.nbhd=[]});
+  
+	for (i = 0; i < nAgents - 1; i++) {
+		for (j = i + 1; j < nAgents; j++) {
+			dst = agents[i].distanceTo(agents[j])
+			if (dst < 30) { // NBHD = 20
+				agents[i].addNbr(agents[j])
+				agents[j].addNbr(agents[i])
+			}
+		}
+	}
+}
+
+
+function init() {
+
+	clock = new THREE.Clock();
+	scene = new THREE.Scene();
+
+	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.z = 120;
+	camera.position.y = 100;
+
+	var gridXZ = new THREE.GridHelper(240, 24, 'red', 'white');
+	scene.add(gridXZ);
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x888888);
+
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+	document.body.appendChild(renderer.domElement);
+
+  /////////////////////////////////////////////////////////////////////
+	let plane = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({
+		transparent: true,
+		opacity: 0.5,
+		visible: true
+	}));
+	scene.add(plane);
+	plane.material.visible = false
+	plane.rotation.x = -Math.PI / 2;
+	pickables = [plane];
+
+	///////目標地
+	targetMesh = new THREE.Mesh(new THREE.CircleGeometry(2,20), new THREE.MeshBasicMaterial({
+		transparent:true,
+		opacity: 0.5
+	}));
+	scene.add(targetMesh);
+	targetMesh.rotation.x = -Math.PI/2
+
+	raycaster = new THREE.Raycaster();
+	document.addEventListener('pointerdown', onDocumentMouseDown, false);
+	
+ 
+	////////////////////////
+	let mesh = CapMesh ();
+    capturer = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), mesh, 'Capturer',initFSM());
+	
+	let Solmesh = SolMesh ();
+    soldier = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), Solmesh, 'Soldier',initFSM());
+	
+	
+	let defmeshR = DefMesh();
+	let defmesh = DefMesh();
+	let defmeshL = DefMesh();
+	defenseR = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmeshR ,'defR',initFSM());
+	defense = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmesh ,'def',initFSM());
+	defenseL = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmeshL ,'defL',initFSM());
+	
+	agents.push(defenseL,defense,defenseR,capturer);
+	
+	defenseR.stateSign = stateSign();
+	capturer.stateSign = stateSign();
+	scene.add (defenseR.stateSign);
+	scene.add (capturer.stateSign);
+
+	
+	scene.obstacles = [];
+	scene.obstacles.push ( new Obstacle (new THREE.Vector3(10,0,30), 20) )
+  
+	path = new THREE.Mesh(new THREE.CylinderGeometry(2,2,1,20),new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+	transparent: true,
+	opacity: 0.3
+	}));
+	scene.add(path);
+}
+
+function onDocumentMouseDown(event) {
+
+	event.preventDefault();
+	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+	// find intersections
+	raycaster.setFromCamera(mouse, camera);
+	intersects = raycaster.intersectObjects(pickables);
+	if (intersects.length > 0) {
+		targetMesh.position.copy(intersects[0].point);
+		targetMesh.position.y = 0.15;
+		//capturer.setSeekTarget (intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
+		soldier.setSeekTarget (intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
+	}
+}
+
+function animate() {
+
+	keyboard.update();
+	requestAnimationFrame(animate);
+	render();
+	
+	
+	//capturer走的路線
+	var radius = 55;
+	path.position.set(radius* Math.cos(angle),0, -radius* Math.sin(angle));
+	path.rotation.y = angle;
+	
+	let dt = clock.getDelta();
+	angle+=5*0.10472*dt;
+	
+	findNbhd(agents);
+	
+	capturer.update(dt);
+	soldier.update(dt);
+	
+	agents.forEach(function(agent) {
+		defenseR.update(dt);
+		defense.update(dt);
+		defenseL.update(dt);
+	})
+	
+	
+	let distance = soldier.pos.distanceTo (capturer.pos);
+	
+	if(distance < 30){
+		capturer.setBrake(10);
+		stop = true; 
+		angle-=5*0.10472*dt;
+	}
+	else{
+		capturer.setSeekTarget (path.position.x,path.position.y,path.position.z);
+		stop = false;
+		dt = clock.getDelta();
+		angle+=5*0.10472*dt;
+	}
+	
+	if(capturer.fsm.state === "follow" && stop === true ){
+		defenseR.fsm.attack();
+		defense.fsm.attack();
+		defenseL.fsm.attack();
+		capturer.fsm.attack();
+		
+	}
+	if(capturer.fsm.state === "defense" && stop === false ){
+		defenseR.fsm.noattack();
+		defense.fsm.noattack();
+		defenseL.fsm.noattack();
+		capturer.fsm.noattack();
+	}
+}
+
+
+function render() {
+  renderer.render(scene, camera);
+}
+
+
+
+
+</script>
+
+</body>
+</html>
