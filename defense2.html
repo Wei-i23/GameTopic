@@ -526,7 +526,7 @@ function animate() {
 	
 	let distance = soldier.pos.distanceTo (capturer.pos);
 	
-	if(distance < 30){
+	if(distance < 50){
 		capturer.setBrake(10);
 		stop = true; 
 		angle-=5*0.10472*dt;
