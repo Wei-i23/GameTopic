@@ -347,22 +347,23 @@ function setTarget(rawAngle) {
 function SolMesh () {
   
 	let loader = new THREE.TextureLoader();
-	loader.setCrossOrigin ('');
-
-	// 有方向性的圖案
-	let solTex = loader.load ('https://i.imgur.com/hHoSAbD.png');
-	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
+	let icon = loader.load('https://i.imgur.com/7yl0PLz.png');
   
 	var soldier = new THREE.Group();
-	let solTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: solTex}));
-	solTop.rotation.x = -Math.PI/2;
-	solTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
-	solTop.position.y = 2.5;
-  
-	let solRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
-	soldier.add (solRing, solTop);
-  
-	soldier.position.y = 2.5;
+	var mat = new THREE.MeshNormalMaterial();
+	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), mat);
+	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
+	body.position.y = 2;
+	pointer.position.set (5, 2, 0);
+
+	// '帥'蓋
+	let iconZX = new THREE.Group();
+	let circle = new THREE.Mesh (new THREE.CircleGeometry(8,8), new THREE.MeshBasicMaterial({map:icon}));
+	circle.position.y = 4;
+	circle.rotation.x = -Math.PI/2;
+	iconZX.add (circle);
+	
+	soldier.add(iconZX, pointer, body);
 	return soldier;
 
 }
@@ -370,46 +371,47 @@ function SolMesh () {
 function CapMesh () {
   
 	let loader = new THREE.TextureLoader();
-	loader.setCrossOrigin ('');
-
-	// 有方向性的圖案
-	let capTex = loader.load ('https://i.imgur.com/1mBck1Y.jpg');
-	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
+	let icon = loader.load('https://i.imgur.com/EoG30F7.png');
   
 	var cap = new THREE.Group();
-	let capTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: capTex}));
-	capTop.rotation.x = -Math.PI/2;
-	capTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
-	capTop.position.y = 2.5;
-  
-	let capRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
-	cap.add (capRing, capTop);
-  
-	cap.position.y = 2.5;
+	var mat = new THREE.MeshNormalMaterial();
+	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), mat);
+	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
+	body.position.y = 2;
+	pointer.position.set (5, 2, 0);
+
+	// '車'蓋
+	let iconZX = new THREE.Group();
+	let circle = new THREE.Mesh (new THREE.CircleGeometry(8,32), new THREE.MeshBasicMaterial({map:icon}));
+	circle.position.y = 4;
+	circle.rotation.x = -Math.PI/2;
+	iconZX.add (circle);
+	
+	cap.add(iconZX, pointer, body);
 	return cap;
 
 }
 
 function DefMesh(){
 	let loader = new THREE.TextureLoader();
-	loader.setCrossOrigin ('');
+	let icon = loader.load('https://i.imgur.com/iiq8Wk5.png');
+  
+	var cap = new THREE.Group();
+	var mat = new THREE.MeshNormalMaterial();
+	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), mat);
+	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
+	body.position.y = 2;
+	pointer.position.set (5, 2, 0);
 
-	// 有方向性的圖案
-	let defTex = loader.load ('https://i.imgur.com/HIbOSmd.png');
-	let woodTex = loader.load ('https://i.imgur.com/DrvlmNW.jpg?1');
-  
-	var def = new THREE.Group();
-	let defTop = new THREE.Mesh (new THREE.CircleGeometry(8,20), new THREE.MeshBasicMaterial({map: defTex}));
-	defTop.rotation.x = -Math.PI/2;
-	defTop.rotation.z = -Math.PI/2;  // 初始：head toward +X (world)
-	defTop.position.y = 2.5;
-  
-	let defRing = new THREE.Mesh (new THREE.CylinderGeometry(8,8,5,20, 2, true), new THREE.MeshBasicMaterial({map: woodTex, side:THREE.DoubleSide}));
-	def.add (defRing, defTop);
-  
-	//scene.add (captain);
-	def.position.y = 2.5;
-	return def;
+	// '卒'蓋
+	let iconZX = new THREE.Group();
+	let circle = new THREE.Mesh (new THREE.CircleGeometry(8,32), new THREE.MeshBasicMaterial({map:icon}));
+	circle.position.y = 4;
+	circle.rotation.x = -Math.PI/2;
+	iconZX.add (circle);
+	
+	cap.add(iconZX, pointer, body);
+	return cap;
 }
 
 function stateSign () {
@@ -560,6 +562,26 @@ function animate() {
 		defense.update(dt);
 		defenseL.update(dt);
 	})
+	
+	// 讓「帥蓋」方位永遠固定
+	soldier.mesh.children[0].quaternion.copy(
+		soldier.mesh.quaternion.clone().invert()
+	);
+	// 讓「車蓋」方位永遠固定
+	capturer.mesh.children[0].quaternion.copy(
+		capturer.mesh.quaternion.clone().invert()
+	);
+	
+	// 讓「卒蓋」方位永遠固定
+	defense.mesh.children[0].quaternion.copy(
+		defense.mesh.quaternion.clone().invert()
+	);
+	defenseR.mesh.children[0].quaternion.copy(
+		defenseR.mesh.quaternion.clone().invert()
+	);
+	defenseL.mesh.children[0].quaternion.copy(
+		defenseL.mesh.quaternion.clone().invert()
+	);
 	
 	let distance = soldier.pos.distanceTo (capturer.pos);
 	
