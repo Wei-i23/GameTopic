@@ -327,7 +327,6 @@ var targetMesh;
 
 var point;
 var stop = false;
-var angle = 0,path;
 
 var pdControl,PDpos;
 
@@ -396,7 +395,7 @@ function DefMesh(){
 	let loader = new THREE.TextureLoader();
 	let icon = loader.load('https://i.imgur.com/iiq8Wk5.png');
   
-	var cap = new THREE.Group();
+	var def = new THREE.Group();
 	var mat = new THREE.MeshNormalMaterial();
 	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), mat);
 	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
@@ -410,8 +409,8 @@ function DefMesh(){
 	circle.rotation.x = -Math.PI/2;
 	iconZX.add (circle);
 	
-	cap.add(iconZX, pointer, body);
-	return cap;
+	def.add(iconZX, pointer, body);
+	return def;
 }
 
 function stateSign () {
@@ -508,7 +507,7 @@ function init() {
 	defense = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmesh ,'def',initFSM());
 	defenseL = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmeshL ,'defL',initFSM());
 	
-	agents.push(defenseL,defense,defenseR);
+	agents.push(defenseR,defense,defenseL);
 	
 	defenseR.stateSign = stateSign();
 	capturer.stateSign = stateSign();
@@ -563,26 +562,6 @@ function animate() {
 		defenseL.update(dt);
 	})
 	
-	// 讓「帥蓋」方位永遠固定
-	soldier.mesh.children[0].quaternion.copy(
-		soldier.mesh.quaternion.clone().invert()
-	);
-	// 讓「車蓋」方位永遠固定
-	capturer.mesh.children[0].quaternion.copy(
-		capturer.mesh.quaternion.clone().invert()
-	);
-	
-	// 讓「卒蓋」方位永遠固定
-	defense.mesh.children[0].quaternion.copy(
-		defense.mesh.quaternion.clone().invert()
-	);
-	defenseR.mesh.children[0].quaternion.copy(
-		defenseR.mesh.quaternion.clone().invert()
-	);
-	defenseL.mesh.children[0].quaternion.copy(
-		defenseL.mesh.quaternion.clone().invert()
-	);
-	
 	let distance = soldier.pos.distanceTo (capturer.pos);
 	
 	if(distance < 50){
@@ -602,6 +581,25 @@ function animate() {
 		stop = false;
 	}
 	
+	// 讓「帥蓋」方位永遠固定
+	soldier.mesh.children[0].quaternion.copy(
+		soldier.mesh.quaternion.clone().invert()
+	);
+	// 讓「車蓋」方位永遠固定
+	capturer.mesh.children[0].quaternion.copy(
+		capturer.mesh.quaternion.clone().invert()
+	);
+	
+	// 讓「卒蓋」方位永遠固定
+	defense.mesh.children[0].quaternion.copy(
+		defense.mesh.quaternion.clone().invert()
+	);
+	defenseR.mesh.children[0].quaternion.copy(
+		defenseR.mesh.quaternion.clone().invert()
+	);
+	defenseL.mesh.children[0].quaternion.copy(
+		defenseL.mesh.quaternion.clone().invert()
+	);
 	
 	
 	
