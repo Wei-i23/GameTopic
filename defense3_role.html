@@ -224,33 +224,54 @@ class Agent extends Avatar {
 			$('#defenseState').text (this.fsm.state);
 			
 			if(this.fsm.state === 'follow'){
+				
+				
 				if(this.name === 'defR'){
 					let pointfR = capturer.mesh.localToWorld(new THREE.Vector3(-10,0,15));
 					super.setFollowTarget (pointfR.x,pointfR.y,pointfR.z);
+					this.mesh.children[2].material.visible = true;
+					this.mesh.children[3].material.visible = false;
 				}
 				else if(this.name === 'def'){
 					let pointf = capturer.mesh.localToWorld(new THREE.Vector3(-20,0,0));
 					super.setFollowTarget (pointf.x,pointf.y,pointf.z);
+					this.mesh.children[2].material.visible = true;
+					this.mesh.children[3].material.visible = false;
 				}
 				else if(this.name === 'defL'){
 					let pointfL = capturer.mesh.localToWorld(new THREE.Vector3(-10,0,-15));
 					super.setFollowTarget (pointfL.x,pointfL.y,pointfL.z);
+					this.mesh.children[2].material.visible = true;
+					this.mesh.children[3].material.visible = false;
 				}
+				
+				
+							
 			}
 			
 			if(this.fsm.state === 'defense'){
+				
+				
 				if(this.name === 'defR'){
 					let pointdR = capturer.mesh.localToWorld(new THREE.Vector3(20,0,-20));
 					super.setFollowTarget (pointdR.x,pointdR.y,pointdR.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
 				}
 				else if(this.name === 'def'){
 					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(30,0,0));
 					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
 				}
 				else if(this.name === 'defL'){
 					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(20,0,20));
 					super.setFollowTarget (pointdL.x,pointdL.y,pointdL.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
 				}
+				
+				
 			}
 			
 		}
@@ -329,6 +350,7 @@ var point;
 var stop = false;
 
 var pdControl,PDpos;
+var distance,defmeshR;
 
 init();
 animate();
@@ -397,9 +419,15 @@ function DefMesh(){
   
 	var def = new THREE.Group();
 	var mat = new THREE.MeshNormalMaterial();
-	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), mat);
+	
+	
+	
+	var body = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), new THREE.MeshBasicMaterial({color:'green'}));
+	var body2 = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 4, 20,1,true), new THREE.MeshBasicMaterial({color:'red'}));
+	
 	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
 	body.position.y = 2;
+	body2.position.y = 2;
 	pointer.position.set (5, 2, 0);
 
 	// '卒'蓋
@@ -409,9 +437,10 @@ function DefMesh(){
 	circle.rotation.x = -Math.PI/2;
 	iconZX.add (circle);
 	
-	def.add(iconZX, pointer, body);
+	def.add(iconZX, pointer,body,body2);
 	return def;
 }
+
 
 function stateSign () {
 	let loader = new THREE.TextureLoader();
@@ -509,6 +538,9 @@ function init() {
 	
 	agents.push(defenseR,defense,defenseL);
 	
+	
+		
+	
 	defenseR.stateSign = stateSign();
 	capturer.stateSign = stateSign();
 	scene.add (defenseR.stateSign);
@@ -562,7 +594,7 @@ function animate() {
 		defenseL.update(dt);
 	})
 	
-	let distance = soldier.pos.distanceTo (capturer.pos);
+	distance = soldier.pos.distanceTo (capturer.pos);
 	
 	if(distance < 60){
 		capturer.setBrake(10);
@@ -579,7 +611,9 @@ function animate() {
 	else{
 		capturer.setSeekTarget (soldier.mesh.position.x,soldier.mesh.position.y,soldier.mesh.position.z);
 		stop = false;
+		
 	}
+	
 	
 	// 讓「帥蓋」方位永遠固定
 	soldier.mesh.children[0].quaternion.copy(
