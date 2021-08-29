@@ -22,13 +22,13 @@
 				text-align: left;
 				top: 400px;
 			}
-
+			
 			#start {
 				position: absolute;
 				top: 440px;
 				font-size: 60px;
 				width: 100%;
-				padding: 5px;
+				padding:5px;
 				text-align: center;
 				color: #ffff00;
 			}
@@ -37,19 +37,12 @@
 				top: 440px;
 				font-size: 60px;
 				width: 100%;
-				padding: 5px;
+				padding:5px;
 				text-align: center;
 				color: #ffff00;
 			}
-			#restart {
-				position: absolute;
-				top: 500px;
-				font-size: 60px;
-				width: 100%;
-				padding: 5px;
-				text-align: center;
-				color: #ffff00;
-			}
+			
+			
 		</style>
 	</head>
 	<body style="overflow: hidden">
@@ -89,10 +82,9 @@
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 
-		<div id="start"></div>
-		<div id="end"></div>
-		<div id="restart"></div>
-
+		<div id = "start"></div>
+		<div id = "end"></div>
+		
 		<script type="module">
 			import { MTLLoader } from "https://threejs.org/examples/jsm/loaders/MTLLoader.js";
 			import { OBJLoader } from "https://threejs.org/examples/jsm/loaders/OBJLoader.js";
@@ -451,6 +443,7 @@
 								);
 								super.setSeekTarget(v2.x, 0, v2.z);
 							}
+
 							//super.setBrake(10);
 						}
 
@@ -704,10 +697,10 @@
 			var defenseL, defense, defenseR;
 			var point;
 			var stop = false;
-
+			
 			//介面
 			var state = -1;
-			var start, end, restart;
+			var start,end;
 
 			init();
 			animate();
@@ -747,8 +740,6 @@
 							from: "touchDown",
 							to: "touchDown",
 						},
-						{ name: "restart", from: "touchDown", to: "search" },
-						{ name: "restart", from: "search", to: "search" },
 					],
 				});
 				return fsm;
@@ -782,14 +773,15 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.setClearColor(0x888888);
-
+				
 				//介面
 				start = document.getElementById("start");
 				start.innerHTML = "Press enter to begin";
-
+	
 				end = document.getElementById("end");
-				restart = document.getElementById("restart");
+				
 
+				
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
 				window.addEventListener("resize", onWindowResize, false);
@@ -863,7 +855,7 @@
 				scene.add(
 					ground,
 					ground1,
-					//startpos,
+					startpos,
 					respawnPos,
 					respawnPos1,
 					flagPoint,
@@ -977,9 +969,7 @@
 						side: THREE.DoubleSide,
 					})
 				);
-				var x = Math.random() * 380 - 190;
-				flag.position.set(x, 8, -x);
-
+				flag.position.set(0, 8, 0);
 				scene.add(flag);
 				flag.name = "flag";
 				pickables2.push(
@@ -1400,63 +1390,42 @@
 
 				scene.add(mesh, mesh1);
 			}
-
-			function restartgame() {
+			
+			function restartgame(){
 				state = -1;
-				end.innerHTML = " ";
-				restart.innerHTML = " ";
-
-				start = document.getElementById("start");
-				start.innerHTML = "Press enter to begin";
-
-				insert = false;
-				theta = 0;
-				HH = 12;
-				hide = false;
-				stop = false;
-				front = false;
-				hidden = false;
-				count = 0;
-				get = false;
-				attack = false;
-
-				var x = Math.random() * 380 - 190;
-				flag.position.set(x, 8, -x);
-
-				let dt = clock.getDelta();
-				let time = clock.getElapsedTime();
-				prey.pos.set(-175, 0, -175);
-				prey.update(dt, time);
-				prey.fsm.restart();
+					end.innerHTML = " ";
+					restart.innerHTML = " ";
+					
+					start = document.getElementById("start");
+					start.innerHTML = "Press enter to begin";
+					
+					flag.position.set(0,8,0);
+				
+					let dt = clock.getDelta();
+					prey.pos.set(-175,0,-175);
+					preditor.pos.set(-175,0,-175);
+					prey.fsm.state = "search";
+					prey.update(dt,time);
+					
+				
 			}
-
+			
 			function animate() {
-				animate.distance = animate.distance ? animate.distance : 0;
+				
 				requestAnimationFrame(animate);
 
 				let dt = clock.getDelta();
 				let time = clock.getElapsedTime();
 
 				keyboard.update();
-				preditor.update(dt);
-				prey.update(dt, time);
+				
+				
 				//checkRaycaster();
 				//update();
 				//soldier.update(dt, time);
-
-				/*
-				if(state === 0){
-					prey.update(dt, time);
-					prey.findTarget(flag);
-				}
-				*/
-
-				agents.forEach(function (agent) {
-					defenseR.update(dt);
-					defense.update(dt);
-					defenseL.update(dt);
-				});
-
+				
+				
+				
 				var dst = prey.pos.distanceTo(flag.position);
 				//var disToSoldier = prey.pos.distanceTo(soldier.pos);
 
@@ -1525,40 +1494,41 @@
 					defense.fsm.noattack();
 					defenseL.fsm.noattack();
 				}
-
+				
 				//Flag
 				let cameraRoot = camera.position.clone();
 				cameraRoot.y = 0;
-				flag.lookAt(cameraRoot);
-
-				if (state === -1) {
-					prey.setBrake(10);
-					//prey.fsm.restart();
-					prey.pos.set(-160, 0, -175);
-					preditor.pos.set(-195, 0, -140);
-					defense.pos.set(-195, 0, -175);
-					defenseL.pos.set(-180, 0, -190);
-					defenseR.pos.set(-180, 0, -160);
-				}
-
-				if (state === 0) {
+				flag.lookAt (cameraRoot);
+				
+				
+				if(state === 0) {
 					start.innerHTML = "";
+					prey.update(dt, time);
 					prey.findTarget(flag);
+					preditor.update(dt);
+					
+					agents.forEach(function (agent) {
+					defenseR.update(dt);
+					defense.update(dt);
+					defenseL.update(dt);
+				});
+
+					
 				}
-				if (keyboard.down("enter") && state === -1) {
+				if(keyboard.down("enter") && state === -1){
 					state = 0;
+					
 				}
 
-				if (prey.fsm.state === "touchDown" && flag.position.x >= 175) {
+				if(prey.fsm.state === "touchDown" && flag.position.x >= 175){
 					end.innerHTML = "You lose.";
 					restart.innerHTML = "Press enter to restart.";
-
+					
 					state = -2;
 				}
-				if (keyboard.down("enter") && state === -2) {
-					restartgame();
-				}
-
+				
+				
+				
 				renderer.render(scene, camera);
 			}
 		</script>
