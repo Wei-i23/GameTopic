@@ -75,40 +75,43 @@ class Avatar {
 		this.angle = 0;
 		this.steermode = '';
 		this.BRAKING = 0;
+		this.avoid = 0;
 	}
   
 	update(dt) {
 		this.accumulateForce();
 		
-		// collision
-		// for all obstacles in the scene
-		let obs = scene.obstacles;
+		if(this.avoid === 1){
+		
+			// collision
+			// for all obstacles in the scene
+			let obs = scene.obstacles;
 
-		// pick the most threatening one
-		let theOne = null;
-		let dist = 1e10;
-		let vhat = this.vel.clone().normalize();
-		const REACH = 50
-		const K = 5
-		let perp;
-		for (let i = 0; i < obs.length; i++) {
-			let point = obs[i].center.clone().sub (this.pos) // c-p
-			let proj  = point.dot(vhat);
-			if (proj > 0 && proj < REACH) {
-				perp = new THREE.Vector3();
-				perp.subVectors (point, vhat.clone().setLength(proj));
-				let overlap = obs[i].size + this.size - perp.length()
-				if (overlap > 0 && proj < dist) {
-					theOne = obs[i]
-					dist = proj
-					perp.setLength (K*overlap);
-					perp.negate()
+			// pick the most threatening one
+			let theOne = null;
+			let dist = 1e10;
+			let vhat = this.vel.clone().normalize();
+			const REACH = 50
+			const K = 5
+			let perp;
+			for (let i = 0; i < obs.length; i++) {
+				let point = obs[i].center.clone().sub (this.pos) // c-p
+				let proj  = point.dot(vhat);
+				if (proj > 0 && proj < REACH) {
+					perp = new THREE.Vector3();
+					perp.subVectors (point, vhat.clone().setLength(proj));
+					let overlap = obs[i].size + this.size - perp.length()
+					if (overlap > 0 && proj < dist) {
+						theOne = obs[i]
+						dist = proj
+						perp.setLength (K*overlap);
+						perp.negate()
+					}
 				}
 			}
+			if (theOne)
+				this.force.add (perp);
 		}
-		if (theOne)
-			this.force.add (perp);
-		
 		this.vel.add(this.force.clone().multiplyScalar(dt));
 
 		// ARRIVAL: velocity modulation
@@ -201,7 +204,7 @@ class Avatar {
 		let push = new THREE.Vector3()
 		for (let i = 0; i < this.nbhd.length; i++) {
 			let point = this.pos.clone().sub(this.nbhd[i].pos);
-			push.add(point.setLength(40 / point.length()))
+			push.add(point.setLength(70 / point.length()))
 		}
 		this.force.add(push);
 	}	
@@ -215,7 +218,7 @@ class Agent extends Avatar {
 		this.name = name;
 		// initial state got from fsm.state;
 		this.stateSign = null;
-	}
+	}	
    
 	update (dt) {
    	
@@ -244,12 +247,34 @@ class Agent extends Avatar {
 					this.mesh.children[2].material.visible = true;
 					this.mesh.children[3].material.visible = false;
 				}
-				
-				
 							
 			}
 			
 			if(this.fsm.state === 'defense'){
+				
+				
+				if(this.name === 'defR'){
+					let pointdR = capturer.mesh.localToWorld(new THREE.Vector3(30,0,-20));
+					super.setFollowTarget (pointdR.x,pointdR.y,pointdR.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
+				}
+				else if(this.name === 'def'){
+					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(-20,0,0));
+					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
+				}
+				else if(this.name === 'defL'){
+					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(30,0,20));
+					super.setFollowTarget (pointdL.x,pointdL.y,pointdL.z);
+					this.mesh.children[2].material.visible = false;
+					this.mesh.children[3].material.visible = true;
+				}
+				
+			}
+			
+			if(this.fsm.state === 'endgame'){
 				
 				
 				if(this.name === 'defR'){
@@ -261,6 +286,8 @@ class Agent extends Avatar {
 				else if(this.name === 'def'){
 					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(30,0,0));
 					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
+					
+					
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
 				}
@@ -270,7 +297,6 @@ class Agent extends Avatar {
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
 				}
-				
 				
 			}
 			
@@ -286,6 +312,10 @@ class Agent extends Avatar {
 				this.stateSign.children[1].material.visible = false;
 			}
 			if (this.fsm.state === 'defense') {
+				this.stateSign.children[1].material.visible = true;
+				this.stateSign.children[0].material.visible = false;
+			}
+			if (this.fsm.state === 'endgame') {
 				this.stateSign.children[1].material.visible = true;
 				this.stateSign.children[0].material.visible = false;
 			}
@@ -324,12 +354,16 @@ class PDControllerR2{
 function initFSM () {
 
  let fsm = new StateMachine({
-    init: 'follow',
+    init: 'defense',
     transitions: [
       { name: 'attack',     from: 'follow',  to: 'defense' },
 	  { name: 'attack',     from: 'defense',  to: 'defense' },
 	  { name: 'noattack',     from: 'defense', to: 'follow'},
 	  { name: 'noattack',     from: 'follow', to: 'follow'},
+	  { name: 'soldierFlag',     from: 'defense', to: 'endgame'},
+	  { name: 'soldierFlag',     from: 'endgame', to: 'endgame'},
+	  { name: 'nosoldierFlag',     from: 'endgame', to: 'defense'},
+	  { name: 'nosoldierFlag',     from: 'defense', to: 'defense'},
     ]
   });
   
@@ -466,7 +500,7 @@ function findNbhd(agents) {
 	for (i = 0; i < nAgents - 1; i++) {
 		for (j = i + 1; j < nAgents; j++) {
 			dst = agents[i].distanceTo(agents[j])
-			if (dst < 30) { // NBHD = 20
+			if (dst < 50) { // NBHD = 20
 				agents[i].addNbr(agents[j])
 				agents[j].addNbr(agents[i])
 			}
@@ -536,20 +570,20 @@ function init() {
 	defense = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmesh ,'def',initFSM());
 	defenseL = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), defmeshL ,'defL',initFSM());
 	
-	agents.push(defenseR,defense,defenseL);
+	agents.push(capturer,defenseR,defense,defenseL);
 	
 	
 		
 	
 	defenseR.stateSign = stateSign();
 	capturer.stateSign = stateSign();
-	scene.add (defenseR.stateSign);
-	scene.add (capturer.stateSign);
+	//scene.add (defenseR.stateSign);
+	//scene.add (capturer.stateSign);
 
 	
 	scene.obstacles = [];
 	//scene.obstacles.push ( new Obstacle (new THREE.Vector3(10,0,30), 20) )
-  
+	
 	
 }
 
@@ -572,6 +606,7 @@ function onDocumentMouseDown(event) {
 		pdControl.setRef(soltarget[0], soltarget[1]);
 	}
 }
+
 
 function animate() {
 
@@ -599,6 +634,7 @@ function animate() {
 	if(distance < 60){
 		capturer.setBrake(10);
 		stop = true; 
+		
 		
 		PDpos = pdControl.update(0.005);
 		let theta = Math.atan2(PDpos[1],PDpos[0]);
@@ -636,19 +672,20 @@ function animate() {
 	);
 	
 	
-	
-	if(capturer.fsm.state === "follow" && stop === true ){
-		defenseR.fsm.attack();
-		defense.fsm.attack();
-		defenseL.fsm.attack();
-		capturer.fsm.attack();
+	if(defense.fsm.state === "defense" && stop === true ){
+		defenseR.fsm.soldierFlag();
+		defense.fsm.soldierFlag();
+		defenseL.fsm.soldierFlag();
+		//capturer.fsm.noattack();
+		
+		
 		
 	}
-	if(capturer.fsm.state === "defense" && stop === false ){
-		defenseR.fsm.noattack();
-		defense.fsm.noattack();
-		defenseL.fsm.noattack();
-		capturer.fsm.noattack();
+	if(defense.fsm.state === "endgame" && stop === false ){
+		defenseR.fsm.nosoldierFlag();
+		defense.fsm.nosoldierFlag();
+		defenseL.fsm.nosoldierFlag();
+		//capturer.fsm.soldierFlag();
 	}
 }
 

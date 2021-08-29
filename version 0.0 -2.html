@@ -7,11 +7,82 @@
 				position: absolute;
 				width: 100vw;
 			}
+			#info {
+				position: absolute;
+				width: 100vw;
+				text-align: center;
+				color: yellow;
+				top: 20px;
+			}
+
+			#btm {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				text-align: left;
+				top: 400px;
+			}
+			
+			#start {
+				position: absolute;
+				top: 440px;
+				font-size: 60px;
+				width: 100%;
+				padding:5px;
+				text-align: center;
+				color: #ffff00;
+			}
+			#end {
+				position: absolute;
+				top: 440px;
+				font-size: 60px;
+				width: 100%;
+				padding:5px;
+				text-align: center;
+				color: #ffff00;
+			}
+			#restart {
+				position: absolute;
+				top: 500px;
+				font-size: 60px;
+				width: 100%;
+				padding:5px;
+				text-align: center;
+				color: #ffff00;
+			}
+			
 		</style>
 	</head>
 	<body style="overflow: hidden">
 		<div id="heading">
-			<h3 style="color: red">Version 0.0 <br /></h3>
+			<h3 style="color: red">Version 0.0-2 <br /></h3>
+		</div>
+		<div id="btm">
+			<input
+				type="button"
+				style="
+					width: 50px;
+					height: 50px;
+					background-image: url('https://i.imgur.com/pyKoKxw.png');
+					background-size: 45px 45px;
+				"
+			/>
+		</div>
+		<div class="manu">
+			<div class="respawn_role">
+				<div class="leader"></div>
+				<div class="capturer"></div>
+				<div class="defenseL"></div>
+				<div class="defense"></div>
+				<div class="defenseR"></div>
+				<div class="heartled"></div>
+				<div class="heartcap"></div>
+				<div class="heartdef"></div>
+				<div class="heartdefL"></div>
+				<div class="heartdefR"></div>
+			</div>
+			<div class="soldier"></div>
+			<div class="heartsol"></div>
 		</div>
 
 		<script src="state-machine.js"></script>
@@ -19,8 +90,15 @@
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 
+		<div id = "start"></div>
+		<div id = "end"></div>
+		<div id = "restart"></div>
+
 		<script type="module">
-			javascript: (function () {
+			import { MTLLoader } from "https://threejs.org/examples/jsm/loaders/MTLLoader.js";
+			import { OBJLoader } from "https://threejs.org/examples/jsm/loaders/OBJLoader.js";
+
+			/*javascript: (function () {
 				var script = document.createElement("script");
 				script.onload = function () {
 					var stats = new Stats();
@@ -33,7 +111,7 @@
 				script.src =
 					"https://mrdoob.github.io/stats.js/build/stats.min.js";
 				document.head.appendChild(script);
-			})();
+			})();*/
 
 			import * as THREE from "https://threejs.org/build/three.module.js";
 			import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
@@ -49,8 +127,8 @@
 					this.pos = pos.clone();
 					this.vel = new THREE.Vector3();
 					this.force = new THREE.Vector3();
-					this.MAXSPEED = 50;
-					this.ARRIVAL_R = 30;
+					this.MAXSPEED = 80;
+					this.ARRIVAL_R = 60;
 
 					this.size = 35;
 					this.angle = 0; // for orientable agent
@@ -225,12 +303,31 @@
 					if (this.fsm) {
 						$("#preditorState").text(this.fsm.state);
 
-						if (this.fsm.state === "hide")
+						if (this.fsm.state === "hide") {
+							/*super.setSeekTarget(
+								30 * Math.cos((pAngle + p1Angle) / 2) +
+									nearObstacle().center.x,
+								0,
+								30 * Math.sin((pAngle + p1Angle) / 2) +
+									nearObstacle().center.z
+							);
+							circleA.rotation.x = -Math.PI / 2;
+							circleA.position.set(
+								30 * Math.cos((pAngle + p1Angle) / 2) +
+									nearObstacle().center.x,
+								0,
+								30 * Math.sin((pAngle + p1Angle) / 2) +
+									nearObstacle().center.z
+							);*/
 							super.setHideTarget(
 								soldier.pos.x,
 								soldier.pos.y,
 								soldier.pos.z
 							);
+							this.mesh.children[0].material.visible = false;
+							this.mesh.children[1].material.visible = false;
+							this.mesh.children[2].material.visible = true;
+						}
 						if (this.fsm.state === "patrol") {
 							let dt = clock.getElapsedTime();
 
@@ -242,7 +339,7 @@
 								$("#Check").text("Check Behind");
 							} else {
 								let dis = prey.mesh.localToWorld(
-									new THREE.Vector3(-50, 0, 50)
+									new THREE.Vector3(-30, 0, 30)
 								);
 								super.setPatrolTarget(dis.x, 0, dis.z);
 								$("#Check").text("Follow Capturer");
@@ -251,6 +348,7 @@
 
 							this.mesh.children[0].material.visible = true;
 							this.mesh.children[1].material.visible = false;
+							this.mesh.children[2].material.visible = false;
 						}
 						if (this.fsm.state === "attack") {
 							super.setBrake(10);
@@ -258,6 +356,7 @@
 
 							this.mesh.children[0].material.visible = false;
 							this.mesh.children[1].material.visible = true;
+							this.mesh.children[2].material.visible = false;
 						}
 					}
 
@@ -297,6 +396,15 @@
 				}
 
 				update(dt, time) {
+					if (this.pos.z > 190) {
+						this.pos.z = 190;
+					} else if (this.pos.z < -190) {
+						this.pos.z = -190;
+					} else if (this.pos.x > 190) {
+						this.pos.x = 190;
+					} else if (this.pos.x < -190) {
+						this.pos.x = -190;
+					}
 					super.update(dt); // calling avatar update
 					if (this.fsm) {
 						if (this.fsm.state === "snatch") {
@@ -349,16 +457,11 @@
 						}
 
 						if (this.fsm.state === "hide") {
-							insert = false;
+							//insert = false;
 							prey.setBrake(10);
 						}
 						if (this.fsm.state === "touchDown") {
-							if (get === true) {
-								flag.position.set(this.pos.x, 10, this.pos.z);
-							}
-							if (insert === true) {
-								super.setSeekTarget(120, 0, 0);
-							}
+							super.setSeekTarget(175, 0, 175);
 						}
 					}
 					if (this.stateSign) {
@@ -375,31 +478,43 @@
 							this.stateSign.children[1].material.visible = false;
 							this.stateSign.children[2].material.visible = false;
 							this.stateSign.children[3].material.visible = false;
+							this.mesh.children[2].material.visible = true;
+							this.mesh.children[3].material.visible = false;
+							this.mesh.children[4].material.visible = false;
 						}
 						if (this.fsm.state === "search") {
 							this.stateSign.children[1].material.visible = true;
 							this.stateSign.children[0].material.visible = false;
 							this.stateSign.children[2].material.visible = false;
 							this.stateSign.children[3].material.visible = false;
+							this.mesh.children[2].material.visible = true;
+							this.mesh.children[3].material.visible = false;
+							this.mesh.children[4].material.visible = false;
 						}
 						if (this.fsm.state === "hide") {
 							this.stateSign.children[2].material.visible = true;
 							this.stateSign.children[0].material.visible = false;
 							this.stateSign.children[1].material.visible = false;
 							this.stateSign.children[3].material.visible = false;
+							this.mesh.children[3].material.visible = true;
+							this.mesh.children[4].material.visible = false;
+							this.mesh.children[2].material.visible = false;
 						}
 						if (this.fsm.state === "touchDown") {
 							this.stateSign.children[3].material.visible = true;
 							this.stateSign.children[0].material.visible = false;
 							this.stateSign.children[1].material.visible = false;
 							this.stateSign.children[2].material.visible = false;
+							this.mesh.children[4].material.visible = true;
+							this.mesh.children[3].material.visible = false;
+							this.mesh.children[2].material.visible = false;
 						}
 					}
 				}
 				/*straight() {
-					start = true;
-					setTimeout(this.straight(), 5000);
-				}*/
+				start = true;
+				setTimeout(this.straight(), 5000);
+			}*/
 
 				findTarget(target) {
 					var point = target.position.clone().sub(this.pos);
@@ -449,6 +564,9 @@
 									pointfR.y,
 									pointfR.z
 								);
+
+								this.mesh.children[0].material.visible = true;
+								this.mesh.children[1].material.visible = false;
 							} else if (this.name === "def") {
 								let pointf = prey.mesh.localToWorld(
 									new THREE.Vector3(-20, 0, 0)
@@ -458,6 +576,9 @@
 									pointf.y,
 									pointf.z
 								);
+
+								this.mesh.children[0].material.visible = true;
+								this.mesh.children[1].material.visible = false;
 							} else if (this.name === "defL") {
 								let pointfL = prey.mesh.localToWorld(
 									new THREE.Vector3(-10, 0, -15)
@@ -467,6 +588,8 @@
 									pointfL.y,
 									pointfL.z
 								);
+								this.mesh.children[0].material.visible = true;
+								this.mesh.children[1].material.visible = false;
 							}
 						}
 						if (this.fsm.state === "defense") {
@@ -479,6 +602,9 @@
 									pointdR.y,
 									pointdR.z
 								);
+
+								this.mesh.children[0].material.visible = false;
+								this.mesh.children[1].material.visible = true;
 							} else if (this.name === "def") {
 								let pointd = prey.mesh.localToWorld(
 									new THREE.Vector3(-20, 0, 0)
@@ -488,6 +614,9 @@
 									pointd.y,
 									pointd.z
 								);
+
+								this.mesh.children[0].material.visible = false;
+								this.mesh.children[1].material.visible = true;
 							} else if (this.name === "defL") {
 								let pointdL = prey.mesh.localToWorld(
 									new THREE.Vector3(15, 0, -15)
@@ -497,6 +626,9 @@
 									pointdL.y,
 									pointdL.z
 								);
+
+								this.mesh.children[0].material.visible = false;
+								this.mesh.children[1].material.visible = true;
 							}
 						}
 					}
@@ -524,9 +656,19 @@
 			class Obstacle {
 				constructor(center, size) {
 					this.center = center.clone();
+					let loader = new THREE.TextureLoader();
+					loader.crossOrigin = "";
+					let texture = loader.load(
+						"https://i.imgur.com/XlAVV7B.jpg"
+					);
+
+					var texMat = new THREE.MeshBasicMaterial({
+						map: texture,
+						side: THREE.DoubleSide,
+					});
 					this.mesh = new THREE.Mesh(
-						new THREE.CylinderGeometry(size, size, 1, 20),
-						new THREE.MeshBasicMaterial()
+						new THREE.CylinderGeometry(size, size, 20, 64),
+						texMat
 					);
 					this.mesh.position.copy(center);
 					this.size = size;
@@ -564,6 +706,10 @@
 			var defenseL, defense, defenseR;
 			var point;
 			var stop = false;
+			
+			//介面
+			var state = -1;
+			var start,end,restart;
 
 			init();
 			animate();
@@ -589,13 +735,15 @@
 					transitions: [
 						{ name: "seeFlag", from: "search", to: "snatch" },
 						{ name: "seeFlag", from: "snatch", to: "snatch" },
-						{ name: "noAttacked", from: "hide", to: "snatch" },
-						{ name: "noAttacked", from: "search", to: "search" },
+						{ name: "seeFlag", from: "hide", to: "snatch" },
+						{ name: "findFlag", from: "hide", to: "search" },
+						{ name: "findFlag", from: "search", to: "search" },
 						{ name: "attacked", from: "snatch", to: "hide" },
 						{ name: "attacked", from: "search", to: "hide" },
 						{ name: "attacked", from: "touchDown", to: "hide" },
 						{ name: "attacked", from: "hide", to: "hide" },
 						{ name: "takeFlag", from: "snatch", to: "touchDown" },
+						{ name: "takeFlag", from: "hide", to: "touchDown" },
 						{
 							name: "takeFlag",
 							from: "touchDown",
@@ -629,11 +777,20 @@
 					1000
 				);
 				camera.position.z = 120;
-				camera.position.y = 200;
+				camera.position.y = 100;
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.setClearColor(0x888888);
+				
+				//介面
+				start = document.getElementById("start");
+				start.innerHTML = "Press enter to begin";
+	
+				end = document.getElementById("end");
+				restart = document.getElementById("restart");
+
+				
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
 				window.addEventListener("resize", onWindowResize, false);
@@ -646,42 +803,76 @@
 					false
 				);
 				//////////////////////////////////////////////////////////////////////////////////////////
-				var ground = new THREE.Mesh(new THREE.PlaneGeometry(100,50,32),
+				var cubeMap = loadCubemap();
+				scene.background = cubeMap;
+
+				//paintFloor();
+				paintBase();
+				var ground = new THREE.Mesh(
+					new THREE.PlaneGeometry(50, 50, 32),
 					new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
-						opacity: 0.3
-					}));
-				ground.rotation.x = -Math.PI/2;
-				ground.rotation.z = Math.PI/2;
-				ground.position.set(-175,0,0);
-				
+						opacity: 0.3,
+					})
+				);
+				ground.rotation.x = -Math.PI / 2;
+				ground.rotation.z = Math.PI / 2;
+				ground.position.set(-175, 0, -175);
+
 				var ground1 = ground.clone();
-				ground1.position.set(175,0,0);
-				
-				var startpos = new THREE.Mesh(new THREE.CircleGeometry(10,32),
+				ground1.position.set(175, 0, 175);
+
+				var startpos = new THREE.Mesh(
+					new THREE.CircleGeometry(10, 32),
 					new THREE.MeshBasicMaterial({
 						color: "yellow",
 						transparent: true,
-						opacity: 0.3
-					}))
-				startpos.rotation.x = -Math.PI/2;
-				
-				var respawnPos = new THREE.Mesh(new THREE.CircleGeometry(10,32),
+						opacity: 0.3,
+						side: THREE.DoubleSide,
+					})
+				);
+				startpos.rotation.x = -Math.PI / 2;
+				//////////////////////////////////////////////////////////////////////////////////////////
+				var respawnPos = new THREE.Mesh(
+					new THREE.CircleGeometry(10, 32),
 					new THREE.MeshBasicMaterial({
-						color: "yellow"
-					}))
-				respawnPos.rotation.x = -Math.PI/2;
-				respawnPos.position.set (-160,1,-40);
-				
+						color: "yellow",
+						side: THREE.DoubleSide,
+					})
+				);
+				respawnPos.rotation.y = -Math.PI / 2;
+
+				respawnPos.position.set(-200, 8, -160);
+
 				var respawnPos1 = respawnPos.clone();
-				respawnPos.position.set (160,1,-40);
-		
-				
-				scene.add(ground,ground1,startpos,respawnPos,respawnPos1);
-				
+				respawnPos.position.set(200, 8, 160);
+				//////////////////////////////////////////////////////////////////////////////////////////
+				var flagPoint = new THREE.Mesh(
+					new THREE.CircleGeometry(5, 32),
+					new THREE.MeshBasicMaterial({
+						color: "red",
+						side: THREE.DoubleSide,
+					})
+				);
+				flagPoint.rotation.x = -Math.PI / 2;
+
+				flagPoint.position.set(-175, 1, -175);
+
+				var flagPoint1 = flagPoint.clone();
+				flagPoint1.position.set(175, 1, 175);
+				scene.add(
+					ground,
+					ground1,
+					startpos,
+					respawnPos,
+					respawnPos1,
+					flagPoint,
+					flagPoint1
+				);
+				//////////////////////////////////////////////////////////////////////////////////////////
 				let plane = new THREE.Mesh(
-					new THREE.PlaneGeometry(240, 240),
+					new THREE.PlaneGeometry(400, 400),
 					new THREE.MeshBasicMaterial({
 						transparent: true,
 						opacity: 0.5,
@@ -692,87 +883,88 @@
 				plane.material.visible = false;
 				plane.rotation.x = -Math.PI / 2;
 				pickables = [plane];
-
+				///////////////////////////////////////////////////////////////////////////////////////////
 				preditor = new PreditorAgent(
-					new THREE.Vector3(),
+					new THREE.Vector3(-175, 0, -175),
 					preditorMesh(),
 					"T-Rex",
 					preditorFSM()
 				);
 				preditor.stateSign = preditorStateSign();
-				scene.add(preditor.stateSign);
+				//scene.add(preditor.stateSign);
 
 				prey = new PreyAgent(
-					new THREE.Vector3(),
+					new THREE.Vector3(-175, 0, -175),
 					capturerMesh(),
 					"sheep",
 					preyFSM()
 				);
 				prey.stateSign = preyStateSign();
-				scene.add(prey.stateSign);
+				//scene.add(prey.stateSign);
 
-				soldier = new DefAgent(
-					randomPosZX(-100, 100),
+				/*soldier = new DefAgent(
+					new THREE.Vector3(175, 0, 175),
 					soldierMesh(),
 					"soldier"
-				);
+				);*/
 
 				let defmeshR = DefMesh();
 				let defmesh = DefMesh();
 				let defmeshL = DefMesh();
 				defenseR = new DefAgent(
-					new THREE.Vector3(
-						-100 + 200 * Math.random(),
-						0,
-						-100 + 200 * Math.random()
-					),
+					new THREE.Vector3(-175, 0, -175),
 					defmeshR,
 					"defR",
 					garrisonFSM()
 				);
 				defense = new DefAgent(
-					new THREE.Vector3(
-						-100 + 200 * Math.random(),
-						0,
-						-100 + 200 * Math.random()
-					),
+					new THREE.Vector3(-175, 0, -175),
 					defmesh,
 					"def",
 					garrisonFSM()
 				);
 				defenseL = new DefAgent(
-					new THREE.Vector3(
-						-100 + 200 * Math.random(),
-						0,
-						-100 + 200 * Math.random()
-					),
+					new THREE.Vector3(-175, 0, -175),
 					defmeshL,
 					"defL",
 					garrisonFSM()
 				);
 				agents.push(defenseL, defense, defenseR, prey);
 				defenseR.stateSign = garrisonStateSign();
-				scene.add(defenseR.stateSign);
+				//scene.add(defenseR.stateSign);
 
 				//add obstacles to the scene
 				scene.obstacles = [];
 				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(40, 0, -70), 15)
+					new Obstacle(new THREE.Vector3(80, 0, 0), 15)
 				);
-				//scene.obstacles.push ( new Obstacle (new THREE.Vector3(-20,0,0), 15) )
 				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(65, 0, 0), 15)
+					new Obstacle(new THREE.Vector3(-75, 0, -60), 15)
+				);
+				scene.obstacles.push(
+					new Obstacle(new THREE.Vector3(0, 0, 40), 15)
+				);
+				scene.obstacles.push(
+					new Obstacle(new THREE.Vector3(48, 0, 120), 15)
+				);
+				scene.obstacles.push(
+					new Obstacle(new THREE.Vector3(-100, 0, 40), 15)
 				);
 				scene.obstacles[0].mesh.name = "obstacles";
 				scene.obstacles[1].mesh.name = "obstacles";
-				//scene.obstacles[2].mesh.name = 'obstacles';
+				scene.obstacles[2].mesh.name = "obstacles";
+				scene.obstacles[3].mesh.name = "obstacles";
+				scene.obstacles[4].mesh.name = "obstacles";
 
 				preditorRaycaster = new THREE.Raycaster();
 				raycaster = new THREE.Raycaster();
 				ray = new THREE.Raycaster();
 				pickables.push(
 					scene.obstacles[0].mesh,
-					scene.obstacles[1].mesh
+					scene.obstacles[1].mesh,
+					scene.obstacles[2].mesh,
+					scene.obstacles[3].mesh,
+					scene.obstacles[4].mesh
 				);
 				//flag
 				let loader = new THREE.TextureLoader();
@@ -792,37 +984,47 @@
 				pickables2.push(
 					flag,
 					scene.obstacles[0].mesh,
-					scene.obstacles[1].mesh
+					scene.obstacles[1].mesh,
+					scene.obstacles[2].mesh,
+					scene.obstacles[3].mesh,
+					scene.obstacles[4].mesh
 				);
 			}
 			function DefMesh() {
 				let loader = new THREE.TextureLoader();
-				loader.setCrossOrigin("");
-
-				// 有方向性的圖案
-				let defTex = loader.load("https://i.imgur.com/HIbOSmd.png");
-				let woodTex = loader.load("https://i.imgur.com/DrvlmNW.jpg?1");
+				let icon = loader.load("https://i.imgur.com/iiq8Wk5.png");
 
 				var def = new THREE.Group();
-				let defTop = new THREE.Mesh(
-					new THREE.CircleGeometry(8, 20),
-					new THREE.MeshBasicMaterial({ map: defTex })
-				);
-				defTop.rotation.x = -Math.PI / 2;
-				defTop.rotation.z = -Math.PI / 2; // 初始：head toward +X (world)
-				defTop.position.y = 2.5;
+				var mat = new THREE.MeshNormalMaterial();
 
-				let defRing = new THREE.Mesh(
-					new THREE.CylinderGeometry(8, 8, 5, 20, 2, true),
-					new THREE.MeshBasicMaterial({
-						map: woodTex,
-						side: THREE.DoubleSide,
-					})
+				var body = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({ color: "green" })
 				);
-				def.add(defRing, defTop);
+				var body2 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({ color: "red" })
+				);
 
-				//scene.add (captain);
-				def.position.y = 2.5;
+				var pointer = new THREE.Mesh(
+					new THREE.BoxGeometry(15, 2, 2),
+					mat
+				);
+				body.position.y = 2;
+				body2.position.y = 2;
+				pointer.position.set(5, 2, 0);
+
+				// '卒'蓋
+				let iconZX = new THREE.Group();
+				let circle = new THREE.Mesh(
+					new THREE.CircleGeometry(8, 32),
+					new THREE.MeshBasicMaterial({ map: icon })
+				);
+				circle.position.y = 4;
+				circle.rotation.x = -Math.PI / 2;
+				iconZX.add(circle);
+
+				def.add(body, body2, iconZX, pointer);
 				return def;
 			}
 
@@ -856,42 +1058,48 @@
 				return soldier;
 			}
 			function preditorMesh() {
-				var loader = new THREE.TextureLoader();
-				loader.setCrossOrigin("");
-
-				// 有方向性的圖案
-				let capTex = loader.load("https://i.imgur.com/T007SwM.png");
-				let woodTex = loader.load("https://i.imgur.com/DrvlmNW.jpg?1");
+				let loader = new THREE.TextureLoader();
+				let icon = loader.load("https://i.imgur.com/9N9ohZ9.jpeg");
 				let redTex = loader.load("https://i.imgur.com/93FViDI.png");
-
+				var mat = new THREE.MeshNormalMaterial();
 				var captain = new THREE.Group();
-				let capTop = new THREE.Mesh(
-					new THREE.CircleGeometry(6, 20),
-					new THREE.MeshBasicMaterial({ map: capTex })
+				var body = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({ color: "green" })
 				);
-				capTop.rotation.x = -Math.PI / 2;
-				capTop.rotation.z = -Math.PI / 2; // 初始：head toward +X (world)
-				capTop.position.y = 2.5;
-
-				let captainRing = new THREE.Mesh(
-					new THREE.CylinderGeometry(6, 6, 5, 20, 2, true),
-					new THREE.MeshBasicMaterial({
-						map: woodTex,
-						side: THREE.DoubleSide,
-					})
-				);
-				let captainWarnRing = new THREE.Mesh(
-					new THREE.CylinderGeometry(6, 6, 5, 20, 2, true),
+				var body2 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
 					new THREE.MeshBasicMaterial({
 						map: redTex,
 						side: THREE.DoubleSide,
 					})
 				);
-				captain.add(captainRing, captainWarnRing, capTop);
+				var body3 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({
+						color: "yellow",
+					})
+				);
+				var pointer = new THREE.Mesh(
+					new THREE.BoxGeometry(15, 2, 2),
+					mat
+				);
+				body.position.y = 3;
+				pointer.position.set(5, 2, 0);
 
+				// '帥'蓋
+				let iconZX = new THREE.Group();
+				let circle = new THREE.Mesh(
+					new THREE.CircleGeometry(8, 8),
+					new THREE.MeshBasicMaterial({ map: icon })
+				);
+				circle.position.y = 5;
+				circle.rotation.x = -Math.PI / 2;
+				iconZX.add(circle);
+
+				captain.add(body, body2, body3, iconZX, pointer);
 				return captain;
 			}
-
 			function capturerMesh() {
 				let loader = new THREE.TextureLoader();
 				let icon = loader.load("https://i.imgur.com/MIvqfLQ.png");
@@ -899,7 +1107,15 @@
 				var mat = new THREE.MeshNormalMaterial();
 				var body = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					mat
+					new THREE.MeshBasicMaterial({ color: "green" }) //search
+				);
+				var body2 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({ color: "yellow" }) //beAttacked
+				);
+				var body3 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({ color: "blue" }) //touchDown
 				);
 				var pointer = new THREE.Mesh(
 					new THREE.BoxGeometry(15, 2, 2),
@@ -918,7 +1134,7 @@
 				circle.rotation.x = -Math.PI / 2;
 				iconZX.add(circle);
 
-				capturer.add(iconZX, pointer, body);
+				capturer.add(iconZX, pointer, body, body2, body3);
 				return capturer;
 			}
 			function preyStateSign() {
@@ -1055,11 +1271,11 @@
 				}
 			}
 			function sight(dst) {
-				if (dst < 100 && front === true /*&& attack === false*/) {
+				if (dst < 150 && front === true) {
 					prey.fsm.seeFlag();
 				}
-				if (dst >= 100 && front === false && attack === false) {
-					prey.fsm.noAttacked();
+				if (dst >= 150 && front === false) {
+					prey.fsm.findFlag();
 				}
 			}
 			function onWindowResize() {
@@ -1074,21 +1290,13 @@
 					.sub(preditor.mesh.localToWorld(new THREE.Vector3(0, 0, 0)))
 					.normalize();
 				preditorRaycaster.set(preditor.pos, preditorDir);
-				/*
-	let intersects = preditorRaycaster.intersectObjects(pickables,true);
-    if (intersects.length > 0) {
-		if(intersects[0].object.name == soldier.name)
-			hide = false;
-		else
-			hide = true;		
-		$('#name').text(intersects[0].object.name);
-    }*/
 
 				let preditordistance = preditor.pos.distanceTo(soldier.pos);
 
 				if (
-					preditorToTarget.dot(preditorDir) > 0 &&
-					preditordistance < 40
+					(preditorToTarget.dot(preditorDir) > 0 &&
+						preditordistance < 60) ||
+					attack == true
 				) {
 					preditor.fsm.shoot();
 					$("#inView").text("soldier in view");
@@ -1110,23 +1318,105 @@
 				clock.elapsedTime = 0;
 				count = Math.random();
 			}, Math.random() * 1000 + 5000);
+
 			function update() {
 				keyboard.update();
 
 				if (keyboard.pressed("left")) {
-					soldier.setSeekTarget(soldier.pos.x - 20, 0, soldier.pos.z);
+					soldier.setSeekTarget(soldier.pos.x - 40, 0, soldier.pos.z);
 				}
 				if (keyboard.pressed("right")) {
-					soldier.setSeekTarget(soldier.pos.x + 20, 0, soldier.pos.z);
+					soldier.setSeekTarget(soldier.pos.x + 40, 0, soldier.pos.z);
 				}
 				if (keyboard.pressed("up")) {
-					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 20);
+					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 40);
 				}
 
 				if (keyboard.pressed("down")) {
 					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 20);
 				}
 			}
+
+			function loadCubemap() {
+				var urls = [
+					"https://i.imgur.com/BTTaDij.png", //posx
+					"https://i.imgur.com/OkJtYZc.png", //negx
+					"https://i.imgur.com/0tGuYpX.png", //posy
+					"https://i.imgur.com/TC89KdS.png", //negy
+					"https://i.imgur.com/nlwQLOA.png", //posz
+					"https://i.imgur.com/7vvbkjE.png", //negz
+				];
+				var loader = new THREE.CubeTextureLoader();
+				loader.setCrossOrigin("");
+				var cubeMap = loader.load(urls);
+				cubeMap.format = THREE.RGBFormat;
+				return cubeMap;
+			}
+			/*function paintFloor() {
+				var loader = new THREE.TextureLoader();
+				loader.load(
+					"https://i.imgur.com/OYgMDzx.jpg",
+					function (texture) {
+						texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat = new THREE.Vector2(3, 5);
+
+						var floorMaterial = new THREE.MeshBasicMaterial({
+							map: texture,
+							side: THREE.DoubleSide,
+						});
+
+						var floorGeometry = new THREE.PlaneGeometry(400, 400);
+
+						var floor = new THREE.Mesh(
+							floorGeometry,
+							floorMaterial
+						);
+
+						floor.position.y = -2;
+						floor.rotation.x = Math.PI / 2;
+						scene.add(floor);
+					}
+				);
+			}*/
+			function paintBase() {
+				const geometry = new THREE.RingGeometry(
+					10.6,
+					22,
+					7,
+					15,
+					0,
+					3.15
+				);
+				const material = new THREE.MeshBasicMaterial({
+					color: "blue",
+					side: THREE.DoubleSide,
+				});
+				const mesh = new THREE.Mesh(geometry, material);
+				//mesh.rotation.y = Math.PI / 2;
+				mesh.position.set(175, 0, 200);
+				const mesh1 = mesh.clone();
+				mesh1.position.set(-175, 0, -200);
+
+				scene.add(mesh, mesh1);
+			}
+			
+			function restartgame(){
+				state = -1;
+					end.innerHTML = " ";
+					restart.innerHTML = " ";
+					
+					start = document.getElementById("start");
+					start.innerHTML = "Press enter to begin";
+					
+					flag.position.set(0,8,0);
+				
+					let dt = clock.getDelta();
+					prey.pos.set(-175,0,-175);
+					prey.update(dt,time);
+				
+				
+			}
+			
 			function animate() {
 				animate.distance = animate.distance ? animate.distance : 0;
 				requestAnimationFrame(animate);
@@ -1136,11 +1426,17 @@
 
 				keyboard.update();
 				preditor.update(dt);
-				checkRaycaster();
-				update();
-				soldier.update(dt, time);
 				prey.update(dt, time);
-				prey.findTarget(flag);
+				//checkRaycaster();
+				//update();
+				//soldier.update(dt, time);
+				
+				/*
+				if(state === 0){
+					prey.update(dt, time);
+					prey.findTarget(flag);
+				}
+				*/
 
 				agents.forEach(function (agent) {
 					defenseR.update(dt);
@@ -1149,43 +1445,61 @@
 				});
 
 				var dst = prey.pos.distanceTo(flag.position);
-				var disToSoldier = prey.pos.distanceTo(soldier.pos);
+				//var disToSoldier = prey.pos.distanceTo(soldier.pos);
 
 				point = new THREE.Mesh();
-				point.position.set(120, 0, 0);
+				point.position.set(200, 0, 0);
 
-				if (disToSoldier < 50) {
+				/*if (disToSoldier < 50) {
 					prey.fsm.attacked();
 					attack = true;
-					get = false;
+					//get = false;
 					stop = true;
+				}*/
+				//if (disToSoldier > 50) {
+				//prey.fsm.noAttacked();
+				attack = false;
+				sight(dst);
+				stop = false;
+				if (get === true) {
+					flag.position.set(prey.pos.x, 10, prey.pos.z);
 				}
-				if (disToSoldier >= 50) {
-					attack = false;
-					stop = false;
-				}
-				if (attack === false) sight(dst);
+				if (insert === true) prey.fsm.takeFlag();
+				//}
+				//if (attack === false) sight(dst);
+				/*if ((get === true || insert === true) && attack === false) {
+							prey.fsm.takeFlag();
+						}*/
 
-				if (get === true || insert === true) {
-					prey.fsm.takeFlag();
-				}
-
-				if (
-					Math.abs(prey.pos.x - point.position.x) < 5 &&
-					Math.abs(prey.pos.z - point.position.z) < 5
-				) {
-					prey.setBrake(10);
-				}
+				/*if (
+							Math.abs(prey.pos.x - point.position.x) < 5 &&
+							Math.abs(prey.pos.z - point.position.z) < 5
+						) {
+							prey.setBrake(10);
+						}*/
 
 				animate.distance = dst;
 
-				// 讓「帥蓋」方位永遠固定
+				/*// 讓「帥蓋」方位永遠固定
 				soldier.mesh.children[0].quaternion.copy(
 					soldier.mesh.quaternion.clone().invert()
-				);
+				);*/
 				// 讓「車蓋」方位永遠固定
 				prey.mesh.children[0].quaternion.copy(
 					prey.mesh.quaternion.clone().invert()
+				);
+				preditor.mesh.children[3].quaternion.copy(
+					preditor.mesh.quaternion.clone().invert()
+				);
+				// 讓「車蓋」方位永遠固定
+				defense.mesh.children[2].quaternion.copy(
+					defense.mesh.quaternion.clone().invert()
+				);
+				defenseR.mesh.children[2].quaternion.copy(
+					defenseR.mesh.quaternion.clone().invert()
+				);
+				defenseL.mesh.children[2].quaternion.copy(
+					defenseL.mesh.quaternion.clone().invert()
 				);
 
 				if (defenseR.fsm.state === "follow" && stop === true) {
@@ -1198,7 +1512,36 @@
 					defense.fsm.noattack();
 					defenseL.fsm.noattack();
 				}
+				
+				//Flag
+				let cameraRoot = camera.position.clone();
+				cameraRoot.y = 0;
+				flag.lookAt (cameraRoot);
+				
+				if(state === -1)
+					prey.setBrake(10);
+				
+				if(state === 0) {
+					start.innerHTML = "";
+					prey.findTarget(flag);		
+				}
+				if(keyboard.down("enter") && state === -1){
+					state = 0;
+					
+				}
 
+				if(prey.fsm.state === "touchDown" && flag.position.x >= 175){
+					end.innerHTML = "You lose.";
+					restart.innerHTML = "Press enter to restart.";
+					
+					state = -2;
+				}
+				if(keyboard.down("enter") && state === -2){
+					restartgame();
+					
+				}
+				
+				
 				renderer.render(scene, camera);
 			}
 		</script>
