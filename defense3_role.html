@@ -384,7 +384,12 @@ var point;
 var stop = false;
 
 var pdControl,PDpos;
-var distance,defmeshR;
+var distanceNow,defmeshR;
+
+//hysteresis
+var threshold = 63;
+var BW = 5;
+
 
 init();
 animate();
@@ -609,7 +614,9 @@ function onDocumentMouseDown(event) {
 
 
 function animate() {
-
+	//animate.distance = animate.distance === undefined ? 0 : animate.distance;
+	
+	
 	keyboard.update();
 	requestAnimationFrame(animate);
 	render();
@@ -629,27 +636,29 @@ function animate() {
 		defenseL.update(dt);
 	})
 	
-	distance = soldier.pos.distanceTo (capturer.pos);
+	distanceNow = soldier.pos.distanceTo (capturer.pos);
 	
-	if(distance < 60){
+	
+	if(distanceNow < threshold - BW/2){
 		capturer.setBrake(10);
 		stop = true; 
-		
+			
 		
 		PDpos = pdControl.update(0.005);
-		let theta = Math.atan2(PDpos[1],PDpos[0]);
-		defenseR.mesh.rotation.y = theta;
-		defense.mesh.rotation.y = theta;
-		defenseL.mesh.rotation.y = theta;
-		capturer.mesh.rotation.y = theta;
-		
+			let theta = Math.atan2(PDpos[1],PDpos[0]);
+			defenseR.mesh.rotation.y = theta;
+			defense.mesh.rotation.y = theta;
+			defenseL.mesh.rotation.y = theta;
+			capturer.mesh.rotation.y = theta;
+	
 	}
-	else{
+	else if(distanceNow > threshold + BW/2){
+		
 		capturer.setSeekTarget (soldier.mesh.position.x,soldier.mesh.position.y,soldier.mesh.position.z);
 		stop = false;
 		
 	}
-	
+
 	
 	// 讓「帥蓋」方位永遠固定
 	soldier.mesh.children[0].quaternion.copy(
