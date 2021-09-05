@@ -15,13 +15,15 @@
 				top: 20px;
 			}
 
-			#btm {
+			#lifebtn {
 				position: absolute;
 				width: 10px;
 				height: 10px;
 				text-align: left;
 				top: 400px;
 			}
+			
+			
 
 			#start {
 				position: absolute;
@@ -56,7 +58,9 @@
 		<div id="heading">
 			<h3 style="color: red">Version 0.0-2 <br /></h3>
 		</div>
-		<div id="btm">
+	
+	<div class="container">
+		<div id="lifebtn">
 			<input
 				type="button"
 				style="
@@ -67,28 +71,24 @@
 				"
 			/>
 		</div>
+		
 		<div class="manu">
+	
 			<div class="respawn_role">
 				<div class="leader"></div>
-				<div class="capturer"></div>
-				<div class="defenseL"></div>
-				<div class="defense"></div>
-				<div class="defenseR"></div>
-				<div class="heartled"></div>
-				<div class="heartcap"></div>
-				<div class="heartdef"></div>
-				<div class="heartdefL"></div>
-				<div class="heartdefR"></div>
+				
 			</div>
-			<div class="soldier"></div>
-			<div class="heartsol"></div>
+			
 		</div>
+	</div>
 
 		<script src="state-machine.js"></script>
 		<script src="https://threejs.org/build/three.min.js"></script>
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
-
+		<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+		
+		
 		<div id="start"></div>
 		<div id="end"></div>
 		<div id="restart"></div>
@@ -126,8 +126,8 @@
 					this.pos = pos.clone();
 					this.vel = new THREE.Vector3();
 					this.force = new THREE.Vector3();
-					this.MAXSPEED = 80;
-					this.ARRIVAL_R = 60;
+					this.MAXSPEED = 200;
+					this.ARRIVAL_R = 150;
 
 					this.size = 35;
 					this.angle = 0; // for orientable agent
@@ -428,9 +428,9 @@
 								if (count > 0.5) {
 									var vLeft = this.mesh.localToWorld(
 										new THREE.Vector3(
-											10 * Math.cos(angle),
+											30 * Math.cos(angle),
 											0,
-											-10 * Math.sin(angle)
+											-30 * Math.sin(angle)
 										)
 									);
 									super.setSeekTarget(vLeft.x, 0, vLeft.z);
@@ -438,16 +438,16 @@
 								if (count < 0.5) {
 									var vRight = this.mesh.localToWorld(
 										new THREE.Vector3(
-											10 * Math.cos(angle),
+											30 * Math.cos(angle),
 											0,
-											10 * Math.sin(angle)
+											30 * Math.sin(angle)
 										)
 									);
 									super.setSeekTarget(vRight.x, 0, vRight.z);
 								}
 							} else {
 								var v2 = this.mesh.localToWorld(
-									new THREE.Vector3(10, 0, 0)
+									new THREE.Vector3(30, 0, 0)
 								);
 								super.setSeekTarget(v2.x, 0, v2.z);
 							}
@@ -708,6 +708,17 @@
 			//介面
 			var state = -1;
 			var start, end, restart;
+			
+			
+			
+			$(".lifebtn").click(function(){
+				$(".manu").fadeToggle(500);
+				
+			});
+			
+			$(".closeBtn").click(function(){
+				$(".manu").fadeOut(500);
+			});
 
 			init();
 			animate();
@@ -789,6 +800,19 @@
 
 				end = document.getElementById("end");
 				restart = document.getElementById("restart");
+				
+				//let loaderBody = new THREE.TextureLoader();
+				//let iconBody = loaderBody.load("https://i.imgur.com/CiXHLya.jpg");
+				document.getElementById("lifebtn").addEventListener("click",function(){
+					swal({
+						title: "生命值",
+						imageUrl: "https://i.imgur.com/CiXHLya.jpg",
+						imageWidth: 100,
+						imageHeight: 100,
+						button: "Close",
+					
+					});
+				});
 
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
@@ -968,7 +992,7 @@
 				//flag
 				let loader = new THREE.TextureLoader();
 				loader.crossOrigin = "";
-				let tex = loader.load("https://i.imgur.com/8SMMBtP.png");
+				let tex = loader.load("https://i.imgur.com/3YSMhL0.png");
 				flag = new THREE.Mesh(
 					new THREE.CircleGeometry(10, 20),
 					new THREE.MeshBasicMaterial({
@@ -995,16 +1019,30 @@
 				let loader = new THREE.TextureLoader();
 				let icon = loader.load("https://i.imgur.com/iiq8Wk5.png");
 
+				let loaderBody = new THREE.TextureLoader();
+				let iconBody = loader.load("https://i.imgur.com/iiq8Wk5.png");
+				iconBody.wrapS = THREE.RepeatWrapping;
+				iconBody.wrapT = THREE.RepeatWrapping;
+				iconBody.repeat.set(5, 1);
+
 				var def = new THREE.Group();
 				var mat = new THREE.MeshNormalMaterial();
 
 				var body = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "green" })
+					new THREE.MeshBasicMaterial({ 
+						color: "lightgreen",
+						map: iconBody,
+						side: THREE.DoubleSide,
+					})
 				);
 				var body2 = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "red" })
+					new THREE.MeshBasicMaterial({ 
+						color: "red",
+						map: iconBody,
+						side: THREE.DoubleSide,
+					})
 				);
 
 				var pointer = new THREE.Mesh(
@@ -1061,17 +1099,28 @@
 			function preditorMesh() {
 				let loader = new THREE.TextureLoader();
 				let icon = loader.load("https://i.imgur.com/9N9ohZ9.jpeg");
-				let redTex = loader.load("https://i.imgur.com/93FViDI.png");
+				let loaderBody = new THREE.TextureLoader();
+				let iconBody = loader.load("https://i.imgur.com/9N9ohZ9.jpeg");
+				iconBody.wrapS = THREE.RepeatWrapping;
+				iconBody.wrapT = THREE.RepeatWrapping;
+				iconBody.repeat.set(5, 1);
+				
+				
 				var mat = new THREE.MeshNormalMaterial();
 				var captain = new THREE.Group();
 				var body = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "green" })
+					new THREE.MeshBasicMaterial({ 
+						color: "lightgreen",
+						map: iconBody,
+						side: THREE.DoubleSide,
+					})
 				);
 				var body2 = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
 					new THREE.MeshBasicMaterial({
-						map: redTex,
+						color: "red",
+						map: iconBody,
 						side: THREE.DoubleSide,
 					})
 				);
@@ -1079,6 +1128,8 @@
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
 					new THREE.MeshBasicMaterial({
 						color: "yellow",
+						map: iconBody,
+						side: THREE.DoubleSide,
 					})
 				);
 				var pointer = new THREE.Mesh(
@@ -1104,20 +1155,49 @@
 			function capturerMesh() {
 				let loader = new THREE.TextureLoader();
 				let icon = loader.load("https://i.imgur.com/MIvqfLQ.png");
+				
+				let loaderBody = new THREE.TextureLoader();
+				let iconBody = loader.load("https://i.imgur.com/MIvqfLQ.png");
+				iconBody.wrapS = THREE.RepeatWrapping;
+				iconBody.wrapT = THREE.RepeatWrapping;
+				iconBody.repeat.set(5, 1);
+				
 				var capturer = new THREE.Group();
 				var mat = new THREE.MeshNormalMaterial();
 				var body = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "green" }) //search
+					new THREE.MeshBasicMaterial({ 
+							color: "lightgreen", 
+							map:iconBody,
+							side:THREE.DoubleSide,
+					}) //search
 				);
 				var body2 = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "yellow" }) //beAttacked
+					new THREE.MeshBasicMaterial({ 
+						color: "yellow",
+						map:iconBody,
+						side:THREE.DoubleSide,
+					}) //beAttacked
 				);
 				var body3 = new THREE.Mesh(
 					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
-					new THREE.MeshBasicMaterial({ color: "blue" }) //touchDown
+					new THREE.MeshBasicMaterial({ 
+						color: "blue" ,
+						map: iconBody,
+						side: THREE.DoubleSide,
+					}) //touchDown
 				);
+				var body4 = new THREE.Mesh(
+					new THREE.CylinderGeometry(8, 8, 4, 20, 1, true),
+					new THREE.MeshBasicMaterial({
+						color: "red",
+						map: iconBody,
+						side: THREE.DoubleSide,
+					}) //endDown
+				);
+				
+				
 				var pointer = new THREE.Mesh(
 					new THREE.BoxGeometry(15, 2, 2),
 					mat
@@ -1129,7 +1209,10 @@
 				let iconZX = new THREE.Group();
 				let circle = new THREE.Mesh(
 					new THREE.CircleGeometry(8, 8),
-					new THREE.MeshBasicMaterial({ map: icon })
+					new THREE.MeshBasicMaterial({ 
+							map: icon,
+							side:THREE.DoubleSide,
+					})
 				);
 				circle.position.y = 4;
 				circle.rotation.x = -Math.PI / 2;

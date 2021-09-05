@@ -1,0 +1,164 @@
+<html>
+<head>
+	<style>
+		* {
+			box-sizing: border-box;
+			font-family: Arial, Helvetica, sans-serif, "微軟正黑體";
+			background-color: #292642;
+		}
+		
+		#container {
+			width: 960px;
+			margin: 0 auto;
+			display: flex;
+
+			#btnGroup {
+				width: calc(100% * 4 / 12);
+				text-align: center;
+				margin-right: 1%;
+				
+				h1 {
+				  color: #fff;
+				  font-size: 30px;
+				}
+				
+				button {
+				  width: 90%;
+				  margin-bottom: 20px;
+				  padding: 20px;
+				  border-radius: 10px;
+				  border: none;
+				  outline: none;
+				  height: 80px;
+				  
+				}
+				
+				#toggleBtn {
+				  background-color: #2564ec;
+				  font-size: 24px;
+				  color: #fff;
+				  &:hover {
+					background: darken(#2564ec, 10%);
+					transition: all 0.5s ease;
+				  }
+				}
+				
+				#openInfoBtn {
+				  background-color: #2df0a5;
+				  font-size: 20px;
+				  color: #083826;
+				  &:hover {
+					background: darken(#2df0a5, 20%);
+					transition: all 0.5s ease;
+					color: #fff;
+				  }
+				}
+			}
+
+			#box {
+				display: block;
+				position: absolute;
+				z-index: 99;
+				top: 30%;
+				left: 40%;
+				border-radius: 10px;
+				
+				#box_container {
+				  width: 500px;
+				  height: auto;
+				  background-color: #0f0b36;
+				  border: 3px solid #fff;
+				  border-radius: 10px;
+				  padding: 3%;
+				  
+				  h2,
+				  li {
+					color: #fff;
+					background-color: transparent;
+				  }
+				  h2 {
+					text-align: center;
+					font-size: 24px;
+				  }
+				  #li_Info {
+					background-color: transparent;
+					cursor: pointer;
+					border-bottom: 1px solid #fff;
+				  }
+				  li {
+					line-height: 1.8;
+					font-size: 24px;
+					&:hover {
+					  color: greenyellow;
+					  transition: all 0.5s ease;
+					}
+				  }
+				  #closeBtn {
+					color: #083826;
+					background-color: #2df0a5;
+					padding: 10px 20px;
+					border: none;
+					outline: none;
+					border-radius: 6px;
+					cursor: pointer;
+					display: flex;
+					margin-left: auto;
+					margin-bottom: 10px;
+					&:hover {
+					  background: darken(#2df0a5, 20%);
+					  transition: all 0.3s ease;
+					  color: #fff;
+					}
+				  }
+				}
+			}
+		}
+
+		#info {
+			width: calc(100% * 8 / 12);
+			display: none;
+			img {
+				max-width: 100%;
+			}
+			p {
+				line-height: 1.5;
+				font-size: 20px;
+				color: #fff;
+			}
+		}
+	</style>
+</head>
+
+<body>
+
+<div class="container">
+	<div class="btnGroup">
+		<h1>點擊按鈕產生互動</h1>
+		<button class="toggleBtn">OPEN / CLOSE INFO</button>
+		<button class="openInfoBtn">CLICK TO SHOW INFO</button>
+	</div>
+
+	<div class="box">
+		<div class="box_container">
+			<h2>哪一個用詞正確</h2>
+			<ul class="li_Info">
+				<li>這是一批賽馬</li>
+				<li>這是一匹賽馬</li>
+				<li>這只是普通馬</li>
+			</ul>
+			<button class="closeBtn">CLOSE</button>
+		</div>
+	</div>
+
+	<div class="info">
+		<img src="https://images.unsplash.com/photo-1588763475559-b854628a953c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1947&q=80">
+
+		<p>
+		  必須防止科技有限公司翻譯，默認確認，師傅環保積分是指條款，這個人們程度防止網遊，求職理由其實健康我的心環境篇文章給你我真幾乎，分類又有定義整合檢測登記手術登陸郵件少年異常電影寶寶簡直造型，全家特徵導航地上沒想到語音辦公水晶記憶經營研究生氣奇蹟高效，說了大。
+		</p>
+	</div>
+
+</div>
+
+</body>
+</html>
