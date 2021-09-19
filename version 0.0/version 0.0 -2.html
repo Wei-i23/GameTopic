@@ -7,12 +7,9 @@
 				position: absolute;
 				width: 100vw;
 			}
-			#info {
+			#btn {
 				position: absolute;
-				width: 100vw;
-				text-align: center;
-				color: yellow;
-				top: 20px;
+				top: 300px;
 			}
 
 			#lifebtn {
@@ -20,9 +17,24 @@
 				width: 10px;
 				height: 10px;
 				text-align: left;
-				top: 400px;
+				
 			}
 			
+			#manu {
+				display: none;
+				width: 400px;
+				height: 200px;
+				margin-left: 10px;
+				background-color: #ffffe0;
+				border-radius: 30px;
+				text-align: left;
+				
+			}
+			
+			#closeBtn {
+				margin-left: 320px;
+				margin-top : 150px;
+			}
 			
 
 			#start {
@@ -53,35 +65,43 @@
 				color: #ffff00;
 			}
 		</style>
+		<link rel="stylesheet" href="hp.css">
+		
 	</head>
-	<body style="overflow: hidden">
+	<body>
 		<div id="heading">
 			<h3 style="color: red">Version 0.0-2 <br /></h3>
-		</div>
-	
-	<div class="container">
-		<div id="lifebtn">
-			<input
-				type="button"
-				style="
-					width: 50px;
-					height: 50px;
-					background-image: url('https://i.imgur.com/pyKoKxw.png');
-					background-size: 45px 45px;
-				"
-			/>
+			
+		
 		</div>
 		
-		<div class="manu">
-	
-			<div class="respawn_role">
-				<div class="leader"></div>
-				
+		<div id = "btn">
+			<p class="lifebtn" onclick= "life()">
+				<input
+					type="button"
+					style="
+						width: 50px;
+						height: 50px;
+						background-image: url('https://i.imgur.com/pyKoKxw.png');						
+						background-size: 45px 45px;
+					"
+				/>
+			</p>
+		
+			<div id="manu">
+				<div class="hpBar">
+					
+					<h2>HP</h2>
+					<div class="hpBox">
+						<div class="hp"></div>
+					</div>
+				</div>
+				<button id = "closeBtn" onclick = "lifeclose()">CLOSE</button>	
 			</div>
-			
 		</div>
-	</div>
-
+			
+		
+		<script src="life.js"></script>
 		<script src="state-machine.js"></script>
 		<script src="https://threejs.org/build/three.min.js"></script>
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -120,6 +140,8 @@
 					return Math.min(Math.max(val, min), max);
 				};
 			})();
+
+			
 
 			class Avatar {
 				constructor(pos, mesh) {
@@ -710,19 +732,22 @@
 			var start, end, restart;
 			
 			
-			
+			/*
 			$(".lifebtn").click(function(){
-				$(".manu").fadeToggle(500);
+				$(".manu").fadeIn(500);
 				
 			});
 			
 			$(".closeBtn").click(function(){
 				$(".manu").fadeOut(500);
-			});
-
+			});*/
+			
+			//life();
 			init();
 			animate();
-
+			
+			
+			
 			function preditorFSM() {
 				let fsm = new StateMachine({
 					init: "patrol",
@@ -778,6 +803,8 @@
 				return fsm;
 			}
 
+			
+			
 			function init() {
 				clock = new THREE.Clock();
 				scene = new THREE.Scene();
@@ -803,7 +830,7 @@
 				
 				//let loaderBody = new THREE.TextureLoader();
 				//let iconBody = loaderBody.load("https://i.imgur.com/CiXHLya.jpg");
-				document.getElementById("lifebtn").addEventListener("click",function(){
+				/*document.getElementById("lifebtn").addEventListener("click",function(){
 					swal({
 						title: "生命值",
 						imageUrl: "https://i.imgur.com/CiXHLya.jpg",
@@ -812,7 +839,9 @@
 						button: "Close",
 					
 					});
-				});
+				});*/
+				//document.getElementById("manu").style.display = "block";
+				
 
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
