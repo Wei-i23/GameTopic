@@ -30,6 +30,7 @@
 				
 			}
 			
+			
 			#manu {
 				display: none;
 				width: 400px;
@@ -41,6 +42,7 @@
 				
 			}
 			
+			
 			#closeBtn {
 				margin-top: 160px;
 				margin-left: 330px;
@@ -51,9 +53,6 @@
 
 	</style>
 	<link rel="stylesheet" href="hp.css">
-	<script>
-		var lifeNum = 3;
-	</script>
 </head>
 <body>
 	
@@ -83,13 +82,13 @@ var pickables = [],intersects;
 var defense;
 
 
-var point;
+var cube,sphere;
 
-var reduce;
-const ATTACK = 30;
-var Hp = 90,Heart = 100;
+var ATTACK = 50;
+var Hp = 100,Heart = 100;
 var objects;
-
+var lifeNum = 3;
+var key = false;
 
 init();
 animate();
@@ -123,11 +122,11 @@ function init() {
   /////////////////////////////////////////////////////////////////////
 	
 	
-	let cube = new THREE.Mesh (new THREE.BoxGeometry(20,20,20), new THREE.MeshBasicMaterial({color:'red'}));
+	cube = new THREE.Mesh (new THREE.BoxGeometry(20,20,20), new THREE.MeshBasicMaterial({color:'red'}));
 	cube.name = 'attack'
 	cube.position.set (-50,0,0)
   
-	let sphere = new THREE.Mesh (new THREE.SphereGeometry(20,20,20), new THREE.MeshBasicMaterial({color:'lightgreen'}));
+	sphere = new THREE.Mesh (new THREE.SphereGeometry(20,20,20), new THREE.MeshBasicMaterial({color:'lightgreen'}));
 	sphere.name = 'safe'
 	sphere.position.set (50,0,0)
 
@@ -140,16 +139,6 @@ function init() {
 	document.addEventListener('pointerdown', onDocumentMouseDown, false);
 	
 
-	
-	reduce = new THREE.Mesh(new THREE.CircleGeometry(15,20),new THREE.MeshBasicMaterial({
-		color: 'red',
-		transparent: true,
-		opacity: 0.8,
-	}));
-	//scene.add(reduce);
-	reduce.rotation.x = -Math.PI/2;
-	reduce.position.set(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random());
-	
 }
 
 function onDocumentMouseDown(event) {
@@ -161,13 +150,36 @@ function onDocumentMouseDown(event) {
 	// find intersections
 	raycaster.setFromCamera(mouse, camera);
 	var intersects = raycaster.intersectObjects(pickables,true);
+	
 	if (intersects.length > 0) {
 		$('#msg').text (intersects[0].object.name )
+		
 		if(intersects[0].object.name == 'attack'){
-			Hp -= ATTACK;
 			
+			Hp -= ATTACK;
+			console.log(Hp);
 			document.querySelector(".hp").style.width = `${Hp}%`;
 			
+			if(Hp == 0){
+				lifeNum--;
+			}
+			if(lifeNum == 3){
+				
+				document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+			}
+			else if(lifeNum == 2){
+				
+				document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+				
+			}
+			else if(lifeNum == 1){
+				
+				document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+			}
+			else{
+				document.getElementById("heart").innerHTML = 'You Die.';
+				scene.remove(objects.cube);
+			}
 		}
 		
 	} 
@@ -179,13 +191,21 @@ function onDocumentMouseDown(event) {
 }
 
 
-
 function animate() {
 
 	keyboard.update();
 	requestAnimationFrame(animate);
 	render();
 	
+	if(Hp == 0){
+		Hp = 100;
+		document.querySelector(".hp").style.width = `${Hp}%`;
+	}
+	if(lifeNum == 0){
+		Hp = 0;
+		document.querySelector(".hp").style.width = `${Hp}%`;
+		objects.remove(cube)
+	}
 }
 
 
@@ -195,8 +215,9 @@ function render() {
 
 
 
-
+console.log(Hp);
 </script>
+
 <div id="title">	<br>
 	respawn
 	</div>
@@ -223,24 +244,20 @@ function render() {
 				<div class="hpBar">
 					
 					<h2>
-						<img src = "defense.png" width = "35" height = "35"/> 
-						
-						HP
+						<img src = "defense.png" width = "40" height = "35"/> 
 					</h2>
 					<div class="hpBox">
 						<div class="hp"></div>
 					</div>
 				</div>
-				<div class = "heart">	
+				<div id = "heart">	
 					<script>
-					
-						for(let i=0;i < lifeNum;i++){
-							console.log(Hp);
+						
 							
-							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "35" height = "35"> ');
-							
-						}
-					
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+						
 					</script>
 				</div>
 				<button id = "closeBtn" onclick = "lifeclose()">CLOSE</button>	

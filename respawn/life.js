@@ -6,3 +6,4 @@ function lifeclose(){
 	
 	document.getElementById("manu").style.display = "none";
 }
+

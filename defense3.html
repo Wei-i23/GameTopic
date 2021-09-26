@@ -262,6 +262,9 @@ class Agent extends Avatar {
 					this.mesh.children[1].position.x = 5;
 					this.mesh.children[4].material.visible = true;
 					this.mesh.children[5].material.visible = false;
+					
+					//body2旋轉
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'def'){
 					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(-20, 0, 0));
@@ -271,6 +274,8 @@ class Agent extends Avatar {
 					this.mesh.children[1].position.x = 5;
 					this.mesh.children[4].material.visible = true;
 					this.mesh.children[5].material.visible = false;
+					
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'defL'){
 					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(15, 0, -15));
@@ -280,6 +285,8 @@ class Agent extends Avatar {
 					this.mesh.children[1].position.x = 5;
 					this.mesh.children[4].material.visible = true;
 					this.mesh.children[5].material.visible = false;
+					
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 			}
 			
@@ -332,7 +339,7 @@ var targetMesh;
 
 var point;
 var stop = false;
-var angle = 0,path;
+var angle;
 
 
 init();
@@ -569,7 +576,7 @@ function init() {
 	
 	defenseR.stateSign = stateSign();
 	capturer.stateSign = stateSign();
-	scene.add (defenseR.stateSign);
+	//scene.add (defenseR.stateSign);
 	scene.add (capturer.stateSign);
 
 	
@@ -600,17 +607,17 @@ function soldierMove() {
 	keyboard.update();
 
 	if (keyboard.pressed("left")) {
-		soldier.setSeekTarget(soldier.pos.x - 40, 0, soldier.pos.z);
+		soldier.setSeekTarget(soldier.pos.x - 10, 0, soldier.pos.z);
 	}
 	if (keyboard.pressed("right")) {
-		soldier.setSeekTarget(soldier.pos.x + 40, 0, soldier.pos.z);
+		soldier.setSeekTarget(soldier.pos.x + 10, 0, soldier.pos.z);
 	}
 	if (keyboard.pressed("up")) {
-		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 40);
+		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 10);
 	}
 
 	if (keyboard.pressed("down")) {
-		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 20);
+		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 10);
 	}
 }
 
@@ -680,7 +687,7 @@ function animate() {
 		defenseL.mesh.quaternion.clone().invert()
 	);
 	
-	
+	angle = 0.01;
 	
 	if(capturer.fsm.state === "follow" && stop === true ){
 		defenseR.fsm.attack();
@@ -694,6 +701,8 @@ function animate() {
 		defense.fsm.noattack();
 		defenseL.fsm.noattack();
 		capturer.fsm.noattack();
+		
+		
 	}
 }
 
