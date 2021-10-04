@@ -251,28 +251,43 @@ class Agent extends Avatar {
 			}
 			
 			if(this.fsm.state === 'defense'){
-				
-				
 				if(this.name === 'defR'){
-					let pointdR = capturer.mesh.localToWorld(new THREE.Vector3(30,0,-20));
+					let pointdR = capturer.mesh.localToWorld(new THREE.Vector3(15, 0, 15));
 					super.setFollowTarget (pointdR.x,pointdR.y,pointdR.z);
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					//body2旋轉
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'def'){
-					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(-20,0,0));
+					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(-20, 0, 0));
 					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'defL'){
-					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(30,0,20));
+					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(15, 0, -15));
 					super.setFollowTarget (pointdL.x,pointdL.y,pointdL.z);
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
-				
 			}
+			
+		}
 			
 			if(this.fsm.state === 'endgame'){
 				
@@ -282,20 +297,36 @@ class Agent extends Avatar {
 					super.setFollowTarget (pointdR.x,pointdR.y,pointdR.z);
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					//body2旋轉
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'def'){
 					let pointd = capturer.mesh.localToWorld(new THREE.Vector3(30,0,0));
 					super.setFollowTarget (pointd.x,pointd.y,pointd.z);
-					
-					
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					//body2旋轉
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				else if(this.name === 'defL'){
 					let pointdL = capturer.mesh.localToWorld(new THREE.Vector3(20,0,20));
 					super.setFollowTarget (pointdL.x,pointdL.y,pointdL.z);
 					this.mesh.children[2].material.visible = false;
 					this.mesh.children[3].material.visible = true;
+					this.mesh.children[1].position.x = 5;
+					this.mesh.children[4].material.visible = true;
+					this.mesh.children[5].material.visible = false;
+					
+					//body2旋轉
+					this.mesh.children[3].material.map.offset.x += 0.01;
 				}
 				
 			}
@@ -482,10 +513,30 @@ function DefMesh(){
 				})
 			);
 	
-	var pointer = new THREE.Mesh(new THREE.BoxGeometry(15, 2, 2), mat);
+	var pointer = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,15,20,1), mat);
+	
+	var pbody = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1.5, 20,1,true), 
+				new THREE.MeshBasicMaterial({
+					color:'red',
+					side: THREE.DoubleSide,
+				})
+			);
+	var pbody2 = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1.5, 20,1,true), 
+				new THREE.MeshBasicMaterial({
+					color:'green',
+					side: THREE.DoubleSide,
+				})
+			);
+	
+	pbody.position.set(13,2,0);
+	pbody.rotation.z = Math.PI/2;
+	pbody2.position.set(11,2,0);
+	pbody2.rotation.z = Math.PI/2;
+			
 	body.position.y = 2;
 	body2.position.y = 2;
 	pointer.position.set (5, 2, 0);
+	pointer.rotation.z = Math.PI/2;
 
 	// '卒'蓋
 	let iconZX = new THREE.Group();
@@ -494,7 +545,7 @@ function DefMesh(){
 	circle.rotation.x = -Math.PI/2;
 	iconZX.add (circle);
 	
-	def.add(iconZX, pointer,body,body2);
+	def.add(iconZX, pointer,body,body2,pbody,pbody2);
 	return def;
 }
 
