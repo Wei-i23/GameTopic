@@ -532,10 +532,6 @@ class CapturerAgent extends Avatar {
 			}
 		}
 	}
-	/*straight() {
-		start = true;
-		setTimeout(this.straight(), 5000);
-	}*/
 
 	findTarget(target) {
 		var point = target.position.clone().sub(this.pos);
@@ -599,11 +595,11 @@ var point;
 
 var ATTACK = 50;
 var Hp = 100;
-var lifeNum = 3;
+var lifeNum = 3,time = 3;
 var objects;
 
 var bullets = [],attack,attack2;
-var count = 0,area,targetMesh,respawnPos;
+var count = 0,area,targetMesh,respawnPos,rebir,tunnel;
 
 init();
 animate();
@@ -678,7 +674,7 @@ function init() {
 	let Solmesh = SolMesh ();
     soldier = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), Solmesh, 'Soldier',initFSM());
 	
-	prey = new CapturerAgent(new THREE.Vector3(),capturerMesh(),"sheep");
+	prey = new CapturerAgent(new THREE.Vector3(-120,20,-100),capturerMesh(),"sheep");
 	//prey1 = new CapturerAgent(new THREE.Vector3(30,0,-90),capturerMesh(),"sheep");
   /////////////////////////////////////////////////////////////////////
 	let plane = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({
@@ -714,43 +710,23 @@ function init() {
 	
 	
 	////蟲洞//////
-	let loaderPortal = new THREE.TextureLoader();
-	loaderPortal.crossOrigin = "";
-	let texture = loaderPortal.load(
-		"https://i.imgur.com/u0tlqX2.png"
-	);
-
-	var texMat = new THREE.MeshBasicMaterial({
-		map: texture,
-		side: THREE.DoubleSide,
-	});
-	respawnPos = new THREE.Mesh(
-				new THREE.RingGeometry(8, 18, 32),
-				texMat
-	);
-
-	respawnPos.rotation.y = -Math.PI / 2;
-
-	respawnPos.position.set(-120, 17, -100);
+	rebir = rebirth(8,18);
+	scene.add(rebir);
+	rebir.position.set(-120,20,-100);
+	//降下來
+	prey.setSeekTarget(-100,20, -100);
+	setTimeout('preydown()',500);
+	setTimeout('cancel()',3000);
 	
-	let tunnel = new THREE.Mesh(new THREE.CylinderGeometry(8,8,10,32),
-			new THREE.MeshBasicMaterial({
-				color: 0x888888,
-				//transparent: true,
-				//opacity: 0.3,
-			
-			})
-	);
-	tunnel.rotation.z = Math.PI/2;
-	tunnel.position.set(-124,16,-100);
-	
-	scene.add(area,targetMesh,respawnPos,tunnel);
+	scene.add(area,targetMesh);
 	scene.obstacles = [];
 	//scene.obstacles.push ( new Obstacle (new THREE.Vector3(10,0,30), 20) )
   
 	
 }
-
+function preydown(){
+	prey.setSeekTarget(-100,0, -100);
+}
 function onDocumentMouseDown(event) {
 
 	event.preventDefault();
@@ -913,8 +889,7 @@ function capturerMesh() {
 	);
 
 	var pointer = new THREE.Mesh(
-		new THREE.CylinderGeometry(1.5, 1.5,15,32),
-		mat
+		new THREE.CylinderGeometry(1.5, 1.5,15,32),mat
 	);
 
 	body.position.y = 2;
@@ -936,6 +911,43 @@ function capturerMesh() {
 
 	capturer.add(iconZX, pointer, body);
 	return capturer;
+}
+function rebirth(inner,outside){
+	let loaderPortal = new THREE.TextureLoader();
+	loaderPortal.crossOrigin = "";
+	let texture = loaderPortal.load(
+		"https://i.imgur.com/u0tlqX2.png"
+	);
+
+	var texMat = new THREE.MeshBasicMaterial({
+		map: texture,
+		side: THREE.DoubleSide,
+	});
+	respawnPos = new THREE.Mesh(
+				new THREE.RingGeometry(inner, outside, 32), //8,18,32
+				texMat
+	);
+
+	respawnPos.rotation.y = -Math.PI / 2;
+	
+	tunnel = new THREE.Mesh(new THREE.CylinderGeometry(8,8,8,32),
+			new THREE.MeshBasicMaterial({
+				color: 0x888888,
+				//transparent: true,
+				//opacity: 0.3,
+			
+			})
+	);
+	tunnel.rotation.x = Math.PI/2;
+	tunnel.position.set(0,0,5);
+	respawnPos.add(tunnel);
+	
+	return respawnPos;
+	//respawnPos.position.set(-120, 17, -100);
+}
+
+function cancel(){
+	scene.remove(rebir);
 }
 
 function animate() {
@@ -977,8 +989,18 @@ function animate() {
 		if(lifeNum != 0){
 			Hp = 100;
 			document.querySelector(".hp").style.width = `${Hp}%`;
+			
+			
+			scene.add(rebir);
+			rebir.position.set(-120,20,-100);
 			scene.add(prey.mesh);
-			prey.pos.set(-130,15,-100);
+			
+			prey.pos = rebir.position.clone();
+			prey.setSeekTarget(-100,20, -100);
+			setTimeout('preydown()',500);
+			setTimeout('cancel()',3000);
+			
+			
 		}
 		
 	}

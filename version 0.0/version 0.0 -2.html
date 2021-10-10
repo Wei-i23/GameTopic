@@ -91,10 +91,22 @@
 			<div id="manu">
 				<div class="hpBar">
 					
-					<h2>HP</h2>
+					<h2>
+						<img src = "capturer.png" width = "40" height = "35"/> 
+					</h2>
 					<div class="hpBox">
 						<div class="hp"></div>
 					</div>
+				</div>
+				<div id = "heart">	
+					<script>
+						
+							
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+							document.write('<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40"> ');
+						
+					</script>
 				</div>
 				<button id = "closeBtn" onclick = "lifeclose()">CLOSE</button>	
 			</div>
@@ -106,7 +118,7 @@
 		<script src="https://threejs.org/build/three.min.js"></script>
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
-		<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+		
 		
 		
 		<div id="start"></div>
@@ -117,20 +129,6 @@
 			import { MTLLoader } from "https://threejs.org/examples/jsm/loaders/MTLLoader.js";
 			import { OBJLoader } from "https://threejs.org/examples/jsm/loaders/OBJLoader.js";
 
-			/*javascript: (function () {
-				var script = document.createElement("script");
-				script.onload = function () {
-					var stats = new Stats();
-					document.body.appendChild(stats.dom);
-					requestAnimationFrame(function loop() {
-						stats.update();
-						requestAnimationFrame(loop);
-					});
-				};
-				script.src =
-					"https://mrdoob.github.io/stats.js/build/stats.min.js";
-				document.head.appendChild(script);
-			})();*/
 
 			import * as THREE from "https://threejs.org/build/three.module.js";
 			import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
@@ -731,18 +729,15 @@
 			var state = -1;
 			var start, end, restart;
 			
+			//蟲洞
+			var respawnPos,respawnPos1,tunnel;
+			//射擊
+			var bullets = [],solattack,solattack2;
+			//生命值
+			var ATTACK = 50;
+			var Hp = 100;
+			var lifeNum = 3;
 			
-			/*
-			$(".lifebtn").click(function(){
-				$(".manu").fadeIn(500);
-				
-			});
-			
-			$(".closeBtn").click(function(){
-				$(".manu").fadeOut(500);
-			});*/
-			
-			//life();
 			init();
 			animate();
 			
@@ -827,20 +822,6 @@
 
 				end = document.getElementById("end");
 				restart = document.getElementById("restart");
-				
-				//let loaderBody = new THREE.TextureLoader();
-				//let iconBody = loaderBody.load("https://i.imgur.com/CiXHLya.jpg");
-				/*document.getElementById("lifebtn").addEventListener("click",function(){
-					swal({
-						title: "生命值",
-						imageUrl: "https://i.imgur.com/CiXHLya.jpg",
-						imageWidth: 100,
-						imageHeight: 100,
-						button: "Close",
-					
-					});
-				});*/
-				//document.getElementById("manu").style.display = "block";
 				
 
 				let controls = new OrbitControls(camera, renderer.domElement);
@@ -942,23 +923,20 @@
 					"T-Rex",
 					preditorFSM()
 				);
-				preditor.stateSign = preditorStateSign();
-				//scene.add(preditor.stateSign);
-
+				
 				prey = new PreyAgent(
 					new THREE.Vector3(-175, 0, -175),
 					capturerMesh(),
 					"sheep",
 					preyFSM()
 				);
-				prey.stateSign = preyStateSign();
-				//scene.add(prey.stateSign);
+				
 
-				/*soldier = new DefAgent(
+				soldier = new DefAgent(
 					new THREE.Vector3(175, 0, 175),
 					soldierMesh(),
 					"soldier"
-				);*/
+				);
 
 				let defmeshR = DefMesh();
 				let defmesh = DefMesh();
@@ -982,42 +960,16 @@
 					garrisonFSM()
 				);
 				agents.push(defenseL, defense, defenseR, prey);
-				defenseR.stateSign = garrisonStateSign();
-				//scene.add(defenseR.stateSign);
+				
 
 				//add obstacles to the scene
 				scene.obstacles = [];
-				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(80, 0, 0), 15)
-				);
-				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(-75, 0, -60), 15)
-				);
-				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(0, 0, 40), 15)
-				);
-				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(48, 0, 120), 15)
-				);
-				scene.obstacles.push(
-					new Obstacle(new THREE.Vector3(-100, 0, 40), 15)
-				);
-				scene.obstacles[0].mesh.name = "obstacles";
-				scene.obstacles[1].mesh.name = "obstacles";
-				scene.obstacles[2].mesh.name = "obstacles";
-				scene.obstacles[3].mesh.name = "obstacles";
-				scene.obstacles[4].mesh.name = "obstacles";
+				
 
 				preditorRaycaster = new THREE.Raycaster();
 				raycaster = new THREE.Raycaster();
 				ray = new THREE.Raycaster();
-				pickables.push(
-					scene.obstacles[0].mesh,
-					scene.obstacles[1].mesh,
-					scene.obstacles[2].mesh,
-					scene.obstacles[3].mesh,
-					scene.obstacles[4].mesh
-				);
+			
 				//flag
 				let loader = new THREE.TextureLoader();
 				loader.crossOrigin = "";
@@ -1035,14 +987,7 @@
 
 				scene.add(flag);
 				flag.name = "flag";
-				pickables2.push(
-					flag,
-					scene.obstacles[0].mesh,
-					scene.obstacles[1].mesh,
-					scene.obstacles[2].mesh,
-					scene.obstacles[3].mesh,
-					scene.obstacles[4].mesh
-				);
+				pickables2.push(flag);
 			}
 			function DefMesh() {
 				let loader = new THREE.TextureLoader();
@@ -1121,8 +1066,14 @@
 				circle.position.y = 4;
 				circle.rotation.x = -Math.PI / 2;
 				iconZX.add(circle);
+				
+				solattack = new THREE.Object3D();
+				solattack.position.set(5,2,0);
+				solattack2 = new THREE.Object3D();
+				solattack2.position.set(4,2,0);
 
-				soldier.add(iconZX, pointer, body);
+
+				soldier.add(iconZX, pointer, body,solattack,solattack2);
 				return soldier;
 			}
 			function preditorMesh() {
@@ -1250,125 +1201,7 @@
 				capturer.add(iconZX, pointer, body, body2, body3);
 				return capturer;
 			}
-			function preyStateSign() {
-				let loader = new THREE.TextureLoader();
-				let snatchMap = loader.load("https://i.imgur.com/L67LiqY.png");
-				let searchMap = loader.load("https://i.imgur.com/ui0cEeC.png");
-				let hideMap = loader.load("https://i.imgur.com/BRChBw1.png");
-				let touchDownMap = loader.load(
-					"https://i.imgur.com/lJ95E9L.png"
-				);
-				let snatchMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(35, 30),
-					new THREE.MeshBasicMaterial({
-						map: snatchMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let searchMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(35, 20),
-					new THREE.MeshBasicMaterial({
-						map: searchMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let hideMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(35, 30),
-					new THREE.MeshBasicMaterial({
-						map: hideMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let touchDownMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(50, 30),
-					new THREE.MeshBasicMaterial({
-						map: touchDownMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let preyStateSign = new THREE.Group();
-				preyStateSign.add(
-					snatchMesh,
-					searchMesh,
-					hideMesh,
-					touchDownMesh
-				);
-				return preyStateSign;
-			}
-			function preditorStateSign() {
-				let loader = new THREE.TextureLoader();
-				let patrolMap = loader.load("https://i.imgur.com/UrpQ83j.png");
-				let hideMap = loader.load("https://i.imgur.com/KKADVCW.png");
-				let attackMap = loader.load("https://i.imgur.com/bCNPaTU.png");
-
-				let patrolMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(16, 10),
-					new THREE.MeshBasicMaterial({
-						map: patrolMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let hideMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(16, 10),
-					new THREE.MeshBasicMaterial({
-						map: hideMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let attackMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(16, 10),
-					new THREE.MeshBasicMaterial({
-						map: attackMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-
-				let preditorStateSign = new THREE.Group();
-				preditorStateSign.add(patrolMesh, hideMesh, attackMesh);
-
-				return preditorStateSign;
-			}
-			function garrisonStateSign() {
-				let loader = new THREE.TextureLoader();
-				let followMap = loader.load("https://i.imgur.com/2JLo68s.png");
-				let defenseMap = loader.load("https://i.imgur.com/wOHiQDl.png");
-
-				let followMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(20, 15),
-					new THREE.MeshBasicMaterial({
-						map: followMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let defenseMesh = new THREE.Mesh(
-					new THREE.PlaneGeometry(20, 15),
-					new THREE.MeshBasicMaterial({
-						map: defenseMap,
-						transparent: true,
-						alphaTest: 0,
-						side: THREE.DoubleSide,
-					})
-				);
-				let defenseStateSign = new THREE.Group();
-				defenseStateSign.add(followMesh, defenseMesh);
-				return defenseStateSign;
-			}
+		
 			function onDocumentMouseDown(event) {
 				event.preventDefault();
 				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -1431,8 +1264,9 @@
 				clock.elapsedTime = 0;
 				count = Math.random();
 			}, Math.random() * 1000 + 5000);
-
-			function update() {
+/*			
+			//重複宣告keyboard.update()，會使在animate的enter不能使用
+			function soldierMove() {
 				keyboard.update();
 
 				if (keyboard.pressed("left")) {
@@ -1448,7 +1282,7 @@
 				if (keyboard.pressed("down")) {
 					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 20);
 				}
-			}
+			}*/
 
 			function loadCubemap() {
 				var urls = [
@@ -1465,32 +1299,7 @@
 				cubeMap.format = THREE.RGBFormat;
 				return cubeMap;
 			}
-			/*function paintFloor() {
-				var loader = new THREE.TextureLoader();
-				loader.load(
-					"https://i.imgur.com/OYgMDzx.jpg",
-					function (texture) {
-						texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-						texture.repeat = new THREE.Vector2(3, 5);
-
-						var floorMaterial = new THREE.MeshBasicMaterial({
-							map: texture,
-							side: THREE.DoubleSide,
-						});
-
-						var floorGeometry = new THREE.PlaneGeometry(400, 400);
-
-						var floor = new THREE.Mesh(
-							floorGeometry,
-							floorMaterial
-						);
-
-						floor.position.y = -2;
-						floor.rotation.x = Math.PI / 2;
-						scene.add(floor);
-					}
-				);
-			}*/
+			
 			function paintBase() {
 				const geometry = new THREE.RingGeometry(
 					10.6,
@@ -1512,6 +1321,110 @@
 
 				scene.add(mesh, mesh1);
 			}
+			/////士兵射擊
+			function SoldierShooting(){
+				if(keyboard.pressed('space')){
+					  
+					let fire = true;
+					count = count + 1;
+					if(count < 2){
+						const geometry = new THREE.SphereGeometry( 0.5, 32, 32 );
+						const material = new THREE.MeshBasicMaterial({color : "yellow"});
+						let bullet = new THREE.Mesh( geometry, material );
+							solattack.getWorldPosition(bullet.position);
+
+						let point = new THREE.Vector3();
+							solattack2.getWorldPosition(point);
+
+						scene.add(bullet);
+
+						let direction = bullet.position.clone().sub(point).normalize(); //創造方向
+
+						bullets.push({
+							bullet: bullet,
+							direction: direction,
+						});
+					}
+					else{
+						//$('#Check').text ('Out of Bullet !!!');
+					}
+					
+				}
+				if(keyboard.pressed('z')){
+					count = 0;
+					//$('#Check').text ('Filled Bullet !!!');
+				}
+				
+			}
+			
+			////射擊
+			function ShootThrough(){
+
+				let x = -1, y = -1;//,m = -1,n = -1;
+				for(let i = 0; i < bullets.length; i++){
+					
+					
+					let prePosition = bullets[i].bullet.position; 
+					let nextPosition = bullets[i].bullet.position.clone().add(bullets[i].direction.clone().setLength(0.5)); 
+					let C = prey.pos.clone().center;
+					let R = prey.size;
+					
+					
+					let dis = bullets[i].bullet.position.clone().sub(prey.pos).length();
+					//let dis1 = bullets[i].bullet.position.clone().sub(prey1.pos).length();
+						
+					if(dis < 8){
+						x = i;
+						y = 0;
+					 }
+					 /*if(dis1 < 8){
+						m = i;
+						n = 0;
+					 }*/
+					 
+
+					bullets[i].bullet.position.copy(nextPosition);
+				}
+				
+				if(x !== -1 && y !== -1){
+					scene.remove(bullets[x].bullet);
+
+					bullets.splice(x,1);
+				   // pickables.splice(y,1);
+				   
+				   /////血量//////
+					Hp -= ATTACK;
+					console.log(Hp);
+					document.querySelector(".hp").style.width = `${Hp}%`;
+						
+					if(Hp == 0){
+						lifeNum--;
+						scene.remove(prey.mesh);
+					}
+					
+					if(lifeNum == 3){
+							
+						document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+					}
+					else if(lifeNum == 2){
+							
+						document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">  <img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+					}
+					else if(lifeNum == 1){
+							
+							document.getElementById("heart").innerHTML = '<img src="https://i.imgur.com/gPrrPdn.png" width = "40" height = "40">';
+					}
+					else{
+							document.getElementById("heart").innerHTML = 'You Die.';
+							
+					}
+					
+					
+				}
+				
+			}
+			
+			
 
 			function restartgame() {
 				state = -1;
@@ -1553,15 +1466,11 @@
 				preditor.update(dt);
 				prey.update(dt, time);
 				//checkRaycaster();
-				//update();
-				//soldier.update(dt, time);
-
-				/*
-				if(state === 0){
-					prey.update(dt, time);
-					prey.findTarget(flag);
-				}
-				*/
+				//soldierMove();
+				soldier.update(dt);
+				SoldierShooting();
+				ShootThrough();
+				
 
 				agents.forEach(function (agent) {
 					defenseR.update(dt);
@@ -1570,19 +1479,12 @@
 				});
 
 				var dst = prey.pos.distanceTo(flag.position);
-				//var disToSoldier = prey.pos.distanceTo(soldier.pos);
+				
 
 				point = new THREE.Mesh();
 				point.position.set(200, 0, 0);
 
-				/*if (disToSoldier < 50) {
-					prey.fsm.attacked();
-					attack = true;
-					//get = false;
-					stop = true;
-				}*/
-				//if (disToSoldier > 50) {
-				//prey.fsm.noAttacked();
+				
 				attack = false;
 				sight(dst);
 				stop = false;
@@ -1590,25 +1492,18 @@
 					flag.position.set(prey.pos.x, 10, prey.pos.z);
 				}
 				if (insert === true) prey.fsm.takeFlag();
-				//}
-				//if (attack === false) sight(dst);
-				/*if ((get === true || insert === true) && attack === false) {
-							prey.fsm.takeFlag();
-						}*/
-
-				/*if (
-							Math.abs(prey.pos.x - point.position.x) < 5 &&
-							Math.abs(prey.pos.z - point.position.z) < 5
-						) {
-							prey.setBrake(10);
-						}*/
+				
 
 				animate.distance = dst;
+				
+				bullets.forEach(function(data){
+					data.bullet.position.add(data.direction.clone().setLength(1));
+				});
 
-				/*// 讓「帥蓋」方位永遠固定
+				// 讓「帥蓋」方位永遠固定
 				soldier.mesh.children[0].quaternion.copy(
 					soldier.mesh.quaternion.clone().invert()
-				);*/
+				);
 				// 讓「車蓋」方位永遠固定
 				prey.mesh.children[0].quaternion.copy(
 					prey.mesh.quaternion.clone().invert()
@@ -1642,6 +1537,21 @@
 				let cameraRoot = camera.position.clone();
 				cameraRoot.y = 0;
 				flag.lookAt(cameraRoot);
+				
+				//soldierMove
+				if (keyboard.pressed("left")) {
+					soldier.setSeekTarget(soldier.pos.x - 40, 0, soldier.pos.z);
+				}
+				if (keyboard.pressed("right")) {
+					soldier.setSeekTarget(soldier.pos.x + 40, 0, soldier.pos.z);
+				}
+				if (keyboard.pressed("up")) {
+					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 40);
+				}
+
+				if (keyboard.pressed("down")) {
+					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 20);
+				}
 
 				if (state === -1) {
 					prey.setBrake(10);
@@ -1670,7 +1580,25 @@
 				if (keyboard.down("enter") && state === -2) {
 					restartgame();
 				}
-
+				
+				/////血量//////
+				if(Hp == 0){
+					if(lifeNum != 0){
+						Hp = 100;
+						document.querySelector(".hp").style.width = `${Hp}%`;
+						
+						
+						scene.add(rebir);
+						rebir.position.set(-120,20,-100);
+						scene.add(prey.mesh);
+						
+						prey.pos = rebir.position.clone();
+						setTimeout('cancel()',3000);
+						
+						
+					}
+					
+				}
 				renderer.render(scene, camera);
 			}
 		</script>

@@ -7,14 +7,17 @@
   position: absolute;
   top: 80px;
   left: 20px;
-  width: 160px;
+  width: 170px;
   
 }
+
+
 
 .hpBar > h2 {
   color: #000;
   text-shadow: 1px 1px 0px #fff;
   float: left;
+  
 }
 
 .hpBox {
@@ -31,4 +34,12 @@
   height: 100%;
   background-color: #fea14a;
   z-index: 11;
+}
+
+#heart {
+	z-index: 11;
+	position: absolute;
+	top: 105px;
+	left: 70px;
+	
 }
