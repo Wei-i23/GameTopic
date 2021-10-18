@@ -39,7 +39,7 @@
 				background-color: #ffffe0;
 				border-radius: 30px;
 				text-align: left;
-				
+				opacity: 0.5;
 			}
 			
 			
@@ -686,6 +686,8 @@ function init() {
 	plane.material.visible = false
 	plane.rotation.x = -Math.PI / 2;
 	pickables = [plane];
+	
+	pickables.push(prey.mesh);
 
 	///////目標地
 	targetMesh = new THREE.Mesh(new THREE.CircleGeometry(2,20), new THREE.MeshBasicMaterial({
@@ -714,9 +716,9 @@ function init() {
 	scene.add(rebir);
 	rebir.position.set(-120,20,-100);
 	//降下來
-	prey.setSeekTarget(-100,20, -100);
-	setTimeout('preydown()',500);
-	setTimeout('cancel()',3000);
+	//prey.setSeekTarget(-100,20, -100);
+	//setTimeout('preydown()',500);
+	//setTimeout('cancel()',5000);
 	
 	scene.add(area,targetMesh);
 	scene.obstacles = [];
@@ -922,6 +924,7 @@ function rebirth(inner,outside){
 	var texMat = new THREE.MeshBasicMaterial({
 		map: texture,
 		side: THREE.DoubleSide,
+		alphaTest: 0.5,
 	});
 	respawnPos = new THREE.Mesh(
 				new THREE.RingGeometry(inner, outside, 32), //8,18,32
@@ -930,16 +933,16 @@ function rebirth(inner,outside){
 
 	respawnPos.rotation.y = -Math.PI / 2;
 	
-	tunnel = new THREE.Mesh(new THREE.CylinderGeometry(8,8,8,32),
-			new THREE.MeshBasicMaterial({
-				color: 0x888888,
-				//transparent: true,
-				//opacity: 0.3,
-			
-			})
-	);
+	tunnel = new THREE.Mesh(new THREE.CylinderGeometry(13,13,8,32),
+						new THREE.MeshBasicMaterial({
+							color: 'white',
+							transparent: true,
+							opacity: 0.3,
+							side: THREE.DoubleSide,
+						})
+				);
 	tunnel.rotation.x = Math.PI/2;
-	tunnel.position.set(0,0,5);
+	tunnel.position.set(0,0,4);
 	respawnPos.add(tunnel);
 	
 	return respawnPos;
@@ -998,7 +1001,7 @@ function animate() {
 			prey.pos = rebir.position.clone();
 			prey.setSeekTarget(-100,20, -100);
 			setTimeout('preydown()',500);
-			setTimeout('cancel()',3000);
+			setTimeout('cancel()',5000);
 			
 			
 		}

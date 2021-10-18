@@ -1,327 +1,230 @@
+<!DOCTYPE html>
 <html>
-<head>
-	<style>
-		#info {
-			position: absolute;
-			width: 100vw;
-			text-align: center;
-			color:yellow;
-			top:20px;
-		}
-		
-		#btm {
-			position: absolute;
-			width: 10px;
-			height: 10px;
-			text-align: left;
-			top:400px;
-		}
+	<head>
+		<style>
+			body {
+				overflow: hidden
+			}
+			#heading {
+				text-align: center;
+				position: absolute;
+				width: 100vw;
+			}
+			#btn {
+				position: absolute;
+				top: 300px;
+			}
 
-		body {
-			overflow: hidden;
+			#lifebtn {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				text-align: left;
+				
+			}
 			
-		}
-		#start {
-			position: absolute;
-			top: 440px;
-			font-size: 60px;
-			width: 100%;
-			padding:5px;
-			text-align: center;
-			color: #ffff00;
-		}
-		.manu {
-				position: absolute;
-				bottom: 0px;
-				width: 100%;
-				height: 150px;
-				background-color: #4169e1;
-				opacity: 0.5;
-				z-index: 1;
-			}
-			.respawn_role {
-				position: absolute;
-				bottom: 5px;
-				width: 70%;
-				height: 120px;
-				border-radius: 8px;
+			#manu {
+				display: none;
+				width: 400px;
+				height: 200px;
+				margin-left: 10px;
 				background-color: #ffffe0;
-				opacity: 0.8;
-				background-position: center;
+				border-radius: 30px;
+				text-align: left;
+				opacity: 0.5;
 			}
-			.soldier {
-				width: 60px;
-				height: 60px;
-				background-image: url("https://i.imgur.com/EpgjR2r.png");
-				background-size: 60px 60px;
+			
+			#closeBtn {
+				margin-left: 320px;
+				margin-top : 150px;
+			}
+			
+
+			#start {
 				position: absolute;
-				top: 10px;
-				right: 300px;
+				top: 440px;
+				font-size: 60px;
+				width: 100%;
+				padding: 5px;
+				text-align: center;
+				color: #ffff00;
 			}
-			.leader {
-				width: 50px;
-				height: 50px;
-				background-image: url("https://i.imgur.com/CiXHLya.jpg");
-				background-size: 50px 50px;
+			#end {
 				position: absolute;
-				top: 5px;
-				left: 20px;
+				top: 440px;
+				font-size: 60px;
+				width: 100%;
+				padding: 5px;
+				text-align: center;
+				color: #ffff00;
 			}
-			.capturer {
-				width: 55px;
-				height: 55px;
-				background-image: url("https://i.imgur.com/EoG30F7.png");
-				background-size: 55px 55px;
+			#restart {
 				position: absolute;
-				bottom: 3px;
-				left: 20px;
+				top: 500px;
+				font-size: 60px;
+				width: 100%;
+				padding: 5px;
+				text-align: center;
+				color: #ffff00;
 			}
-			.defenseL {
-				width: 40px;
-				height: 40px;
-				background-image: url("https://i.imgur.com/iiq8Wk5.png");
-				background-size: 40px 40px;
-				position: absolute;
-				top: 2px;
-				right: 350px;
-			}
-			.defense {
-				width: 40px;
-				height: 40px;
-				background-image: url("https://i.imgur.com/iiq8Wk5.png");
-				background-size: 40px 40px;
-				position: absolute;
-				top: 42px;
-				right: 350px;
-			}
-			.defenseR {
-				width: 40px;
-				height: 40px;
-				background-image: url("https://i.imgur.com/iiq8Wk5.png");
-				background-size: 40px 40px;
-				position: absolute;
-				top: 82px;
-				right: 350px;
-			}
-
-			.heartled {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				top: 10px;
-				left: 100px;
-			}
-			.heartcap {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				bottom: 10px;
-				left: 100px;
-			}
-			.heartdefL {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				top: 2px;
-				right: 100px;
-			}
-			.heartdef {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				top: 42px;
-				right: 100px;
-			}
-			.heartdefR {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				top: 82px;
-				right: 100px;
-			}
-			.heartsol {
-				width: 240px;
-				height: 35px;
-				background-image: url("https://i.imgur.com/gPrrPdn.png");
-				background-size: 45px 35px;
-				position: absolute;
-				top: 70px;
-				right: 50px;
-			}
-	</style>
-	
-	
-	
-</head>
-<body>
-	<div id="info">
-		<h1>Background</h1>
-	</div>
-	<div id = "btm">
-		<input type="button" style="width:50px;height:50px;background-image:url('https://i.imgur.com/pyKoKxw.png'); background-size:45px 45px;" >
-	</div>
-	
-	<div class = "manu">
-		<div class = "respawn_role">
-			<div class = "leader"></div>
-			<div class = "capturer"></div>
-			<div class = "defenseL"></div>
-			<div class = "defense"></div>
-			<div class = "defenseR"></div>
-			<div class = "heartled"></div>
-			<div class = "heartcap"></div>
-			<div class = "heartdef"></div>
-			<div class = "heartdefL"></div>
-			<div class = "heartdefR"></div>
-		</div>
-		<div class = "soldier"></div>
-		<div class = "heartsol"></div>
-	</div>
-	
-	
-
-<script src="https://threejs.org/build/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
-
-<div id = "start"></div>
-<div id = "end"></div>
-
-<script>
-
-var scene, renderer, camera;
-var clock = new THREE.Clock();
-var mesh, angle = 0;
-
-var keyboard = new KeyboardState();
-var state = -1;
-var start,end;
-
-init();
-animate();
-
-function loadCubemap() {
-
-	var path = "https://threejs.org/examples/textures/cube/SwedishRoyalCastle/";
-	var format = '.jpg';
-	var urls = [
-		path + 'px' + format, path + 'nx' + format,
-		path + 'py' + format, path + 'ny' + format,
-		path + 'pz' + format, path + 'nz' + format
-	];
-	var loader = new THREE.CubeTextureLoader();
-	loader.setCrossOrigin ('');
-	var cubeMap = loader.load(urls);
-	cubeMap.format = THREE.RGBFormat;
-	return cubeMap;
-  
-}
-
-function init() {
-	scene = new THREE.Scene();
-	
-	
-	renderer = new THREE.WebGLRenderer();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.setClearColor(0x888888);
-	
-	start = document.getElementById("start");
-	start.innerHTML = "Press enter to begin";
-	
-	end = document.getElementById("end");
-
-	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-	camera.position.z = 500;
-	camera.position.y = 200;
-	
-	var gridXZ = new THREE.GridHelper(400, 40, "red", "white");
-	scene.add(gridXZ);
-	
-	
-	let controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-	document.body.appendChild(renderer.domElement);
-	
-	var cubeMap = loadCubemap();
-	//scene.background = cubeMap;
-  
-	var light = new THREE.PointLight(0xffffff, 1, 100);
-	light.position.set(10, 10, 10);
-	scene.add(light);
-
-	var ground = new THREE.Mesh(new THREE.PlaneGeometry(100,50,32),
-		new THREE.MeshBasicMaterial({
-			color: 0xff0000,
-			transparent: true,
-			opacity: 0.3
-		}));
-	ground.rotation.x = -Math.PI/2;
-	ground.rotation.z = Math.PI/2;
-	ground.position.set(-175,0,0);
-				
-	var ground1 = ground.clone();
-	ground1.position.set(175,0,0);
-				
-	var startpos = new THREE.Mesh(new THREE.CircleGeometry(10,32),
-		new THREE.MeshBasicMaterial({
-			color: "yellow",
-			transparent: true,
-			opacity: 0.3
-	}))
-	startpos.rotation.x = -Math.PI/2;
-				
-	var respawnPos = new THREE.Mesh(new THREE.CircleGeometry(10,32),
-		new THREE.MeshBasicMaterial({
-			color: "yellow"
-	}))
-	respawnPos.rotation.x = -Math.PI/2;
-	respawnPos.position.set (-190,1,0);
-				
-	var respawnPos1 = respawnPos.clone();
-	respawnPos.position.set (190,1,0);
+		</style>
 		
+		
+	</head>
+	<body>
+		<div id="heading">
+			<h3 style="color: yellow">Background <br /></h3>
+			
+		
+		</div>
+
+		<script src="https://threejs.org/build/three.min.js"></script>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+		
+	
+		<script type="module">
+			import { MTLLoader } from "https://threejs.org/examples/jsm/loaders/MTLLoader.js";
+			import { OBJLoader } from "https://threejs.org/examples/jsm/loaders/OBJLoader.js";
+
+
+			import * as THREE from "https://threejs.org/build/three.module.js";
+			import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+
+			(function () {
+				Math.clamp = function (val, min, max) {
+					return Math.min(Math.max(val, min), max);
+				};
+			})();
+
+			
+
+			
+			//preditor
+			var camera, scene, renderer, clock;
+			var preditor, prey, soldier;
+			var pickables = [];
+			var raycaster = new THREE.Raycaster();
+			var mouse = new THREE.Vector2();
+
+			//介面
+			var state = -1;
+			var start, end, restart;
+			
+			//蟲洞
+			var respawnPos,respawnPos1,tunnel,rebir,rebir2;
+		
+			
+			
+			init();
+			animate();
+			
+			
+			function rebirth(inner,outside){
+				let loaderPortal = new THREE.TextureLoader();
+				loaderPortal.crossOrigin = "";
+				let texture = loaderPortal.load(
+					"https://i.imgur.com/u0tlqX2.png"
+				);
+
+				var texMat = new THREE.MeshBasicMaterial({
+					map: texture,
+					side: THREE.DoubleSide,
+					alphaTest: 0.5,
+				});
+				respawnPos = new THREE.Mesh(
+							new THREE.RingGeometry(inner, outside, 32), //8,18,32
+							texMat
+				);
+
+				respawnPos.rotation.y = -Math.PI / 2;
 				
-	scene.add(ground,ground1,startpos,respawnPos,respawnPos1);
+				tunnel = new THREE.Mesh(new THREE.CylinderGeometry(13,13,8,32),
+									new THREE.MeshBasicMaterial({
+										color: 'white',
+										transparent: true,
+										opacity: 0.3,
+										side: THREE.DoubleSide,
+									})
+							);
+				tunnel.rotation.x = Math.PI/2;
+				tunnel.position.set(0,0,4);
+				respawnPos.add(tunnel);
 				
-	
+				return respawnPos;
+				//respawnPos.position.set(-120, 17, -100);
+			}
+			
+			function init() {
+				
+				scene = new THREE.Scene();
+				camera = new THREE.PerspectiveCamera(
+					50,
+					window.innerWidth / window.innerHeight,
+					1,
+					1000
+				);
+				camera.position.z = 120;
+				camera.position.y = 100;
 
-	window.addEventListener('resize', onWindowResize, false);
-}
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(0x888888);
 
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-}
 
-function animate() {
-	var dt = clock.getDelta();
-	keyboard.update();
-	
-	
-	if(state === 0) start.innerHTML = "";
-	
-	if(keyboard.down("enter") && state === -1){
-		state = 0;
-	}
-	
-	
-	requestAnimationFrame(animate);
-	renderer.render(scene, camera);
-}
-
-	
-</script>
-
-</body>
+				let controls = new OrbitControls(camera, renderer.domElement);
+				document.body.appendChild(renderer.domElement);
+			
+				var gridXZ = new THREE.GridHelper(400, 40, "red", "white");
+				scene.add(gridXZ);
+				
+				let wall = new THREE.Group();
+				let wallUp = new THREE.Mesh(new THREE.PlaneGeometry(200,100),
+								new THREE.MeshBasicMaterial({
+									color: 'green',
+									transparent: true,
+									opacity: 0.5,
+									side: THREE.DoubleSide,
+								}));
+				let wallLeft = wallUp.clone();
+				wallLeft.rotation.y = Math.PI/2;
+				let wallRight = wallLeft.clone();
+				let wallBottom = wallUp.clone();
+				
+				wall.add(wallUp,wallLeft,wallRight,wallBottom);
+				
+				wallUp.position.set(0,0,-100);
+				wallLeft.position.set(-100,0,0);
+				wallRight.position.set(100,0,0);
+				wallBottom.position.set(0,0,100);
+				wall.position.y = 50;
+				
+				let ground = new THREE.Group();
+				let groundE = new THREE.Mesh(
+					new THREE.PlaneGeometry(40, 40, 32),
+					new THREE.MeshBasicMaterial({
+						color: 0xff0000,
+						transparent: true,
+						opacity: 0.3,
+						side: THREE.DoubleSide,
+					})
+				);
+				
+				groundE.rotation.x = Math.PI / 2;
+				
+				let groundP = groundE.clone();
+				
+				ground.add(groundE,groundP);
+				groundE.position.set(-80,0,-80);
+				groundP.position.set(80,0,80);
+				
+				scene.add(wall,ground);
+			}
+			
+			function animate() {
+				requestAnimationFrame(animate);
+				renderer.render(scene, camera);
+			}
+		</script>
+	</body>
 </html>
