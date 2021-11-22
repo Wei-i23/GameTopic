@@ -159,7 +159,7 @@
 					
 					//this.rotAngle = 0;
 
-					this.size = 35;
+					this.size = 45;
 					this.angle = 0; // for orientable agent
 					this.mesh = mesh;
 					scene.add(mesh);
@@ -684,18 +684,48 @@
 			class Obstacle {
 				constructor(center, size) {
 					this.center = center.clone();
+					let loader1 = new THREE.TextureLoader();
+					loader1.crossOrigin = "";
+					let texture1 = loader1.load(
+						"https://i.imgur.com/XlAVV7B.jpg"
+					);
+					texture1.wrapS = THREE.RepeatWrapping;
+					texture1.wrapT = THREE.RepeatWrapping;
+					texture1.repeat.set(2, 1);
+					var texMat1 = new THREE.MeshBasicMaterial({
+						map: texture1,
+						side: THREE.DoubleSide,
+					});
+					this.mesh1 = new THREE.Mesh(
+						new THREE.CircleGeometry(size, 32),
+						texMat1
+					);
+					this.mesh1.rotation.x = -Math.PI / 2;
+					this.mesh1.position.set(center.x, center.y + 10, center.z);
+					this.size = size;
+					scene.add(this.mesh1);
+
 					let loader = new THREE.TextureLoader();
 					loader.crossOrigin = "";
 					let texture = loader.load(
 						"https://i.imgur.com/XlAVV7B.jpg"
 					);
-
+					texture.wrapS = THREE.RepeatWrapping;
+					texture.wrapT = THREE.RepeatWrapping;
+					texture.repeat.set(5, 1);
 					var texMat = new THREE.MeshBasicMaterial({
 						map: texture,
 						side: THREE.DoubleSide,
 					});
 					this.mesh = new THREE.Mesh(
-						new THREE.CylinderGeometry(size, size, 20, 64),
+						new THREE.CylinderGeometry(
+							size,
+							size,
+							20,
+							64,
+							64,
+							true
+						),
 						texMat
 					);
 					this.mesh.position.copy(center);
@@ -750,9 +780,20 @@
 			
 			//視角
 			var isSwitch = false;
-			var rotAngle,power;
+			
 			//瞄準
 			var hudCamera,hudScene,zoom = false;
+			//戰士移動
+			var movepos = new THREE.Vector3(170,0,170);
+			var movevel = new THREE.Vector3();
+			var moveforce = new THREE.Vector3();
+			var angle,power;
+			
+			//小視窗
+			var cameraHUD2,sceneHUD,cameraHUD1;
+			
+			//tree
+			var trees = [],trees2 = [],trees3 = [],trees4 = [];
 			
 			$('#toggle').click (
 
@@ -775,7 +816,178 @@
 			
 			init();
 			animate();
-		
+			
+			function initHUD() {
+				  // sceneHUD: a simple line boundary
+				  sceneHUD = new THREE.Scene();
+				  cameraHUD1 = new THREE.OrthographicCamera(-10.5, 10.5, 10.5, -10.5, -50, 50);
+				  cameraHUD1.position.z = 20;  // for border
+				  
+				  //小視窗
+				cameraHUD2 = new THREE.OrthographicCamera(-220,220,220,-220,-420,420);
+				cameraHUD2.position.set (0,30,0)
+				cameraHUD2.up.set (0,0,-1)   // for top view
+				cameraHUD2.lookAt (new THREE.Vector3())
+
+				  let points = [];
+				  points.push (
+					new THREE.Vector3(-10, -10, 0),
+					new THREE.Vector3(10, -10, 0),
+					new THREE.Vector3(10, 10, 0),
+					new THREE.Vector3(-10, 10, 0),
+					new THREE.Vector3(-10, -10, 0));
+				  var lineGeometry = new THREE.BufferGeometry().setFromPoints (points);
+					
+				  var line = new THREE.Line(lineGeometry,
+					new THREE.LineBasicMaterial({
+					  color: 0xffffff
+					}));
+				  sceneHUD.add(line);
+			  
+			}
+
+			function back(){
+			
+				let loader = new THREE.TextureLoader();
+					loader.crossOrigin = "";
+					let tex = loader.load(
+						"https://i.imgur.com/qoaV6j8.jpg"
+					);
+				
+				let wall = new THREE.Mesh(new THREE.PlaneGeometry(600,300),
+							new THREE.MeshBasicMaterial({
+								map: tex
+								//side: THREE.DoubleSide
+							}));
+				wall.rotation.y = Math.PI/2;
+				wall.position.set(-300,150,0);
+				
+				
+					
+				let gt_og = new THREE.TextureLoader().load( 'https://i.imgur.com/hyZYHl2.jpg' );
+				let gg_og = new THREE.PlaneBufferGeometry( 600, 100 );
+				let gm_og = new THREE.MeshBasicMaterial( { color: 0xffffff, map: gt_og ,side: THREE.DoubleSide} );
+
+				let out_ground = new THREE.Mesh( gg_og, gm_og );
+				
+				out_ground.material.map.repeat.set( 60, 60 );
+				out_ground.material.map.wrapS = THREE.RepeatWrapping;
+				out_ground.material.map.wrapT = THREE.RepeatWrapping;
+				// note that because the ground does not cast a shadow, .castShadow is left false
+				out_ground.receiveShadow = true;
+				
+				out_ground.rotation.x = Math.PI/2;
+				out_ground.rotation.z = Math.PI/2;
+				out_ground.position.set(-250,0,0);
+				
+				let bg = new THREE.Group();
+				bg.add(wall,out_ground);
+				return bg;
+				//scene.add(wall,out_ground);
+				
+			}
+			function tree(){
+				let loader = new THREE.TextureLoader();
+				loader.crossOrigin = '';
+				var texture = loader.load('https://i.imgur.com/omX5Drl.png');
+				
+				var texMat = new THREE.MeshBasicMaterial({
+							map: texture,
+							//transparent: true
+							alphaTest: 0.5
+				});
+				
+				tree = new THREE.Mesh(new THREE.PlaneGeometry(40, 80), texMat);
+				
+				for (let i = 0; i < 10; i++) {
+					let tt = tree.clone();
+					tt.position.set (-250, 40, (-1+Math.random()*3)*180)
+					trees.push (tt)
+					scene.add (tt)
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt2 = tree.clone();
+					tt2.position.set ((-1+Math.random()*3)*180, 40, -250)
+					trees2.push (tt2)
+					scene.add (tt2);
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt3 = tree.clone();
+					tt3.position.set (250, 40, (-1+Math.random()*3)*180)
+					trees3.push (tt3)
+					scene.add (tt3);
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt4 = tree.clone();
+					tt4.position.set ((-1+Math.random()*3)*180, 40, 250)
+					trees4.push (tt4)
+					scene.add (tt4);
+				}
+			}
+			
+			function gasBox(){
+				let loader1 = new THREE.TextureLoader();
+				loader1.crossOrigin = "";
+				let texture1 = loader1.load("https://i.imgur.com/XlAVV7B.jpg");
+				texture1.wrapS = THREE.RepeatWrapping;
+				texture1.wrapT = THREE.RepeatWrapping;
+				texture1.repeat.set(2, 1);
+				var texMat1 = new THREE.MeshBasicMaterial({
+					map: texture1,
+					side: THREE.DoubleSide,
+				});
+				let mesh1 = new THREE.Mesh(new THREE.CircleGeometry(10, 32),texMat1);
+				mesh1.rotation.x = -Math.PI / 2;
+				//mesh1.position.set(center.x, center.y + 10, center.z);
+				
+				
+				
+				let loader = new THREE.TextureLoader();
+					loader.crossOrigin = "";
+					let texture = loader.load(
+						"https://i.imgur.com/XlAVV7B.jpg"
+					);
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set(5, 1);
+
+				var texMat = new THREE.MeshBasicMaterial({
+						map: texture,
+						side: THREE.DoubleSide,
+				});
+				var box1 = new THREE.Mesh(
+						new THREE.CylinderGeometry(10, 10 , 30, 64),
+						texMat
+				);
+				box1.add(mesh1);
+				mesh1.position.y = 15.3;
+				var box2 = box1.clone();
+				var box3 = box1.clone();
+				var box4 = box1.clone();
+				var box5 = box1.clone();
+				var box6 = box1.clone();
+				var box7 = box1.clone();
+				var box8 = box1.clone();
+				var box9 = box1.clone();
+				var box10 = box1.clone();
+				
+				let box = new THREE.Group();
+				box.add(box1,box2,box3,box4,box5);
+				
+				
+				box1.position.set(-200,15,190);
+				box2.position.set(-200,15,170);
+				box3.position.set(-200,15,150);
+				box4.position.set(-200,15,130);
+				box5.position.set(-200,15,110);
+				
+				return box;
+				//scene.add(box);
+			}
+			
 			function init() {
 				clock = new THREE.Clock();
 				scene = new THREE.Scene();
@@ -787,6 +999,8 @@
 				);
 				camera.position.z = 120;
 				camera.position.y = 100;
+				
+				
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(window.innerWidth, window.innerHeight);
@@ -799,12 +1013,15 @@
 				end = document.getElementById("end");
 				restart = document.getElementById("restart");
 				
+				let light = new THREE.PointLight(0xffffff);
+				light.position.set(100, 300, 200);
+				scene.add(light);
 
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
 				window.addEventListener("resize", onWindowResize, false);
 				var gridXZ = new THREE.GridHelper(400, 40, "red", "white");
-				scene.add(gridXZ);
+				//scene.add(gridXZ);
 
 				document.addEventListener(
 					"pointerdown",
@@ -813,23 +1030,96 @@
 				);
 				//////////////////////////////////////////////////////////////////////////////////////////
 				var cubeMap = loadCubemap();
-				scene.background = cubeMap;
+				//scene.background = cubeMap;
 				
-				var ground = new THREE.Mesh(
+				//  GROUND
+
+				var gt = new THREE.TextureLoader().load( 'https://i.imgur.com/hyZYHl2.jpg' );
+				var gg = new THREE.PlaneBufferGeometry( 400, 400 );
+				var gm = new THREE.MeshBasicMaterial( { color: 0xffffff, map: gt ,side: THREE.DoubleSide} );
+
+				var ground = new THREE.Mesh( gg, gm );
+				ground.rotation.x = - Math.PI / 2;
+				ground.material.map.repeat.set( 60, 60 );
+				ground.material.map.wrapS = THREE.RepeatWrapping;
+				ground.material.map.wrapT = THREE.RepeatWrapping;
+				// note that because the ground does not cast a shadow, .castShadow is left false
+				ground.receiveShadow = true;
+				scene.add(ground);
+				
+				
+				let grd = new THREE.Group();
+				let groundE = new THREE.Mesh(
 					new THREE.PlaneGeometry(50, 50, 32),
 					new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
 						opacity: 0.3,
+						side: THREE.DoubleSide,
 					})
 				);
-				ground.rotation.x = -Math.PI / 2;
-				ground.rotation.z = Math.PI / 2;
-				ground.position.set(-175, 0, -175);
-
-				var ground1 = ground.clone();
-				ground1.position.set(175, 0, 175);
-
+				
+				groundE.rotation.x = Math.PI / 2;
+				
+				let groundP = groundE.clone();
+				
+				grd.add(groundE,groundP);
+				groundE.position.set(-175,0.5,-175);
+				groundP.position.set(175,0.5,175);
+				
+				scene.add(grd);
+				
+				//background
+				let bg_left = back();
+				let bg_front = back();
+				let bg_right = back();
+				let bg_down = back();
+				scene.add(bg_left,bg_front,bg_right,bg_down);
+				bg_front.rotation.y = -Math.PI/2;
+				bg_right.rotation.y = Math.PI;
+				bg_down.rotation.y = Math.PI/2;
+				
+				let box_a = gasBox();
+				let box_b = gasBox();
+				let box_c = gasBox();
+				
+				let box_d = gasBox();
+				let box_e = gasBox();
+				let box_f = gasBox();
+				
+				let box_g = gasBox();
+				let box_h = gasBox();
+				let box_i = gasBox();
+				
+				let box_j = box_g.clone();
+				let box_k = box_h.clone();
+				let box_l = box_i.clone();
+				
+				scene.add(box_a,box_b,box_c,box_d,box_e,box_f,box_g,box_h,box_i,box_j,box_k,box_l);
+				
+				box_b.position.set(0,0,-100);
+				box_c.position.set(0,0,-200);
+				
+				box_d.position.set(400,0,-300);
+				box_e.position.set(400,0,-200);
+				box_f.position.set(400,0,-100);
+				
+				box_g.position.set(-210,0,-400);
+				box_h.position.set(-110,0,-400);
+				box_i.position.set(-10,0,-400);
+				
+				box_j.position.set(-285,0,0);
+				box_k.position.set(-185,0,0);
+				box_l.position.set(-85,0,0);
+				
+				box_g.rotation.y = Math.PI/2;
+				box_h.rotation.y = Math.PI/2;
+				box_i.rotation.y = Math.PI/2;
+				
+				box_j.rotation.y = Math.PI/2;
+				box_k.rotation.y = Math.PI/2;
+				box_l.rotation.y = Math.PI/2;
+				
 				var startpos = new THREE.Mesh(
 					new THREE.CircleGeometry(10, 32),
 					new THREE.MeshBasicMaterial({
@@ -842,15 +1132,16 @@
 				startpos.rotation.x = -Math.PI / 2;
 				//////////////////////////////////////////////////////////////////////////////////////////
 				////蟲洞//////
-				rebir = rebirth(8,18);
+				rebir = rebirth();
 				rebir2 = rebir.clone();
-				//rebir2.rotation.y = Math.PI/2;
+				rebir.rotation.y = Math.PI/2;
+				rebir2.rotation.y = Math.PI/2;
 				
 				scene.add(rebir,rebir2);
-				rebir.position.set(-200,20,-170);
-				rebir2.position.set(200,20,170);
+				rebir.position.set(-200,25,-170);
+				rebir2.position.set(200,25,170);
 				
-				
+				tree();
 				
 	
 				//////////////////////////////////////////////////////////////////////////////////////////
@@ -868,8 +1159,7 @@
 				var flagPoint1 = flagPoint.clone();
 				flagPoint1.position.set(175, 1, 175);
 				scene.add(
-					ground,
-					ground1,
+					
 					flagPoint,
 					flagPoint1
 				);
@@ -882,7 +1172,7 @@
 						visible: true,
 					})
 				);
-				scene.add(plane);
+				//scene.add(plane);
 				plane.material.visible = false;
 				plane.rotation.x = -Math.PI / 2;
 				pickables = [plane];
@@ -905,7 +1195,7 @@
 				
 				
 				soldier = new DefAgent(
-					new THREE.Vector3(175, 0, 175),
+					new THREE.Vector3(170, 0, 170),
 					soldierMesh(),
 					"soldier"
 				);
@@ -983,10 +1273,15 @@
 				
 				hudScene = new THREE.Scene();
 				hudScene.add (new THREE.Mesh (new THREE.RingGeometry(12,15,30), new THREE.MeshBasicMaterial({color:'black'})));
-				hudScene.add (new THREE.Mesh (new THREE.PlaneGeometry(40,40), new THREE.MeshBasicMaterial({color:'yellow', transparent:true,opacity:0.2})));
 				hudScene.add (makeCross());
 
 				hudCamera = new THREE.OrthographicCamera (-20,20,20,-20,-10,10);
+			
+				power = 5.0;
+				angle = 0.0;
+				
+				initHUD();
+				renderer.autoClear = false;
 			}
 			
 
@@ -1070,43 +1365,100 @@
 				clock.elapsedTime = 0;
 				count = Math.random();
 			}, Math.random() * 1000 + 5000);
-/*			
-			//重複宣告keyboard.update()，會使在animate的enter不能使用
-			function soldierMove() {
-				keyboard.update();
-
-				if (keyboard.pressed("left")) {
-					soldier.setSeekTarget(soldier.pos.x - 40, 0, soldier.pos.z);
-				}
-				if (keyboard.pressed("right")) {
-					soldier.setSeekTarget(soldier.pos.x + 40, 0, soldier.pos.z);
+		
+			
+			function SoldierMoving(dt) {
+				
+				//var dis = soldier.pos.distanceTo(nearObstacleSold().mesh.position);
+				 
+				if(movevel.length() > 0){
+					angle = 1.5*Math.PI + Math.atan2(movevel.x,movevel.z);
 				}
 				if (keyboard.pressed("up")) {
-					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 40);
+					power *= 1.2;
 				}
 
 				if (keyboard.pressed("down")) {
-					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 20);
+					power /= 1.2;
 				}
-			}*/
+				 
+				power = Math.clamp (power, 0, 80.0);
+				 
+				var angle_thrust = angle;
+				if (keyboard.pressed("left")) {
+					angle_thrust += 0.8;
+				}
+				if (keyboard.pressed("right")) {
+					angle_thrust -= 0.8;
+				}
+				
+				var thrust = new THREE.Vector3(1,0,0).multiplyScalar(power).applyAxisAngle (new THREE.Vector3(0,1,0), angle_thrust);
+				moveforce.copy (thrust);
+				moveforce.add(movevel.clone().multiplyScalar(-2))
+				movevel.add(moveforce.clone().multiplyScalar(dt));
+				movepos.add(movevel.clone().multiplyScalar(dt));
+				 
+				/*for(var i= 0;i<scene.obstacles.length;i++){
+					
+					if(dis < nearObstacleSold().size + 8){
+						movepos.sub(movevel.clone().multiplyScalar(dt));
+					}
+					
+				}*/
+				/*
+				if(inHUD){
+					const soldierPos = soldier.mesh.getWorldPosition(new THREE.Vector3()).clone();
+					const cameraPos = camera.getWorldPosition(new THREE.Vector3()).clone();
+					
+					const dir = cameraPos.clone().sub(soldierPos);
+					dir.y = 0;
+					camera.lookAt(cameraPos.clone().add(dir));
+				
+				}*/
+				
+				if(keyboard.down("shift")){
+					zoom = true;
+					inHUD = true;
+
+					soldier.mesh.add(camera);
+					camera.position.copy(new THREE.Vector3(20,2,0));
+					camera.lookAt(soldier.pos.clone().add(new THREE.Vector3(21,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), angle_thrust)).add(new THREE.Vector3(0,2,0)));
+						
+				}
+				else if(keyboard.up("shift")){
+					inHUD = false;
+					zoom = false;
+
+					soldier.mesh.remove(camera);
+					camera.position.set(0,120,100);
+					camera.lookAt(new THREE.Vector3(0,0,0));
+				}
+
+				camera.updateProjectionMatrix();
+			}
+
 			function makeCross() {
 				let cross = new THREE.Group();
 
-				let geometry0 = new THREE.BufferGeometry();
-				geometry0.setAttribute(
+				let points = [
 					new THREE.Vector3(-12, 0, 0),
 					new THREE.Vector3(12, 0, 0)
-				);
+				];
+
+				let geometry0 = new THREE.BufferGeometry();
+				geometry0.setFromPoints(points);
 				let line0 = new THREE.Line(
 					geometry0,
 					new THREE.LineBasicMaterial({ color: "black" })
 				);
 
-				let geometry1 = new THREE.BufferGeometry();
-				geometry1.setAttribute(
+				points = [
 					new THREE.Vector3(0, -12, 0),
 					new THREE.Vector3(0, 12, 0)
-				);
+				];
+
+				let geometry1 = new THREE.BufferGeometry();
+				geometry1.setFromPoints(points);
 				let line1 = new THREE.Line(
 					geometry1,
 					new THREE.LineBasicMaterial({ color: "black" })
@@ -1251,45 +1603,50 @@
 				}
 				
 			}
-			function rebirth(inner,outside){
-				let loaderPortal = new THREE.TextureLoader();
-				loaderPortal.crossOrigin = "";
-				let texture = loaderPortal.load(
-					"https://i.imgur.com/u0tlqX2.png"
-				);
-
-				var texMat = new THREE.MeshBasicMaterial({
-					map: texture,
-					side: THREE.DoubleSide,
-					alphaTest: 0.5,
+			function rebirth(){
+				var length_up = 16,width_up = 8;
+				var rr_up = 4;
+				var shape_up = new THREE.Shape();
+				
+				shape_up.moveTo(length_up/2,width_up/2);
+				shape_up.absarc(0,width_up/2,20,0,Math.PI*2,true);
+				
+				var holePath_up = new THREE.Path();
+				holePath_up.moveTo(length_up/2, width_up/2);
+				holePath_up.absarc(0, width_up/2, 15, 0, Math.PI * 2, true);
+				shape_up.holes.push(holePath_up);
+				
+				var extrudeSettings_up = {
+				steps: 1,
+				depth: 3, // extrude along +Z
+				bevelEnabled: false,
+			  };
+				
+				let loader = new THREE.TextureLoader()
+				loader.setCrossOrigin ("")
+				let map = loader.load ("https://i.imgur.com/u0tlqX2.png")
+				map.wrapS = map.wrapT = THREE.WrapRepeating;
+				map.repeat.set (1,1);
+				var geometry = new THREE.ExtrudeGeometry(shape_up,extrudeSettings_up);
+				var material = new THREE.MeshLambertMaterial({
+					 map: map
 				});
-				respawnPos = new THREE.Mesh(
-							new THREE.RingGeometry(inner, outside, 32), //8,18,32
-							texMat
-				);
-
-				respawnPos.rotation.y = -Math.PI / 2;
-				
-				tunnel = new THREE.Mesh(new THREE.CylinderGeometry(13,13,8,32),
-						new THREE.MeshBasicMaterial({
-							color: 'white',
-							transparent: true,
-							opacity: 0.3,
-							side: THREE.DoubleSide,
-						})
-				);
-				tunnel.rotation.x = Math.PI/2;
-				tunnel.position.set(0,0,4);
-				//respawnPos.add(tunnel);
-				
-				return respawnPos;
-				//respawnPos.position.set(-120, 17, -100);
+				var mesh = new THREE.Mesh(geometry, material);
+				//scene.add(mesh);
+			  
+				//mesh.position.set(-2,5,0);
+				//mesh.rotation.x = -Math.PI/2;
+				return mesh;
 			}
 			function preydown(){
-				prey.setSeekTarget(-170,0, -170);
-				soldier.setSeekTarget(170,0,170);
+				prey.setSeekTarget(-180,0, -170);
+				//soldier.setSeekTarget(170,0,170);
 			}
-
+			function soldierdown(){
+				soldier.setSeekTarget(170,0, 170);
+				//soldier.setSeekTarget(170,0,170);
+			}
+			
 			function cancel(){
 				scene.remove(rebir,rebir2);
 			}
@@ -1329,7 +1686,7 @@
 			function animate() {
 				animate.distance = animate.distance ? animate.distance : 0;
 				requestAnimationFrame(animate);
-
+				
 				let dt = clock.getDelta();
 				let time = clock.getElapsedTime();
 
@@ -1337,11 +1694,9 @@
 				//preditor.update(dt);
 				prey.update(dt, time);
 				//checkRaycaster();
-				//soldierMove();
+				
+				
 				soldier.update(dt);
-				SoldierShooting();
-				ShootThrough();
-				checkAim();
 
 				/*agents.forEach(function (agent) {
 					defenseR.update(dt);
@@ -1374,82 +1729,35 @@
 				rebir.rotation.z += 0.05;
 				rebir2.rotation.z += 0.05;
 				
-				// 讓「帥蓋」方位永遠固定
-				if(!isSwitch){
-					soldier.mesh.children[0].quaternion.copy(
-						soldier.mesh.quaternion.clone().invert()
-					);
-				}
-				// 讓「車蓋」方位永遠固定
-				prey.mesh.children[0].quaternion.copy(
-					prey.mesh.quaternion.clone().invert()
-				);
-				/*preditor.mesh.children[3].quaternion.copy(
-					preditor.mesh.quaternion.clone().invert()
-				);
-				defense.mesh.children[2].quaternion.copy(
-					defense.mesh.quaternion.clone().invert()
-				);
-				defenseR.mesh.children[2].quaternion.copy(
-					defenseR.mesh.quaternion.clone().invert()
-				);
-				defenseL.mesh.children[2].quaternion.copy(
-					defenseL.mesh.quaternion.clone().invert()
-				);
-
-				if (defenseR.fsm.state === "follow" && stop === true) {
-					defenseR.fsm.attack();
-					defense.fsm.attack();
-					defenseL.fsm.attack();
-				}
-				if (defenseR.fsm.state === "defense" && stop === false) {
-					defenseR.fsm.noattack();
-					defense.fsm.noattack();
-					defenseL.fsm.noattack();
-				}
-				*/
+				
+				
 				//Flag
 				let cameraRoot = camera.position.clone();
 				cameraRoot.y = 0;
 				flag.lookAt(cameraRoot);
 				
+				///tree
+				//let cameraRoot = camera.position.clone();
+				//cameraRoot.y = 0;
+				trees.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees2.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees3.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees4.forEach (function(t) {t.lookAt (cameraRoot)});
 				
-				var angle_thrust = rotAngle;
-				//soldierMove
-				if (keyboard.pressed("s"))  
-					soldier.setBrake(0);
-				if (keyboard.pressed("left")) {
-					soldier.setSeekTarget(soldier.pos.x - 40, 0, soldier.pos.z);
-					if(isSwitch){
-						soldier.mesh.children[0].rotation.y = -Math.PI/2;
-						
-					}
-				}
-				if (keyboard.pressed("right")) {
-					soldier.setSeekTarget(soldier.pos.x + 40, 0, soldier.pos.z);
-					if(isSwitch){
-						soldier.mesh.children[0].rotation.y = -Math.PI/2;
-					
-					}
-				}
-				if (keyboard.pressed("up")) {
-					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 40);
-					if(isSwitch){
-						soldier.mesh.children[0].rotation.y = -Math.PI/2;
-					
-					}
-				}
-
-				if (keyboard.pressed("down")) {
-					soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 40);
-					if(isSwitch){
-						soldier.mesh.children[0].rotation.y = -Math.PI/2;
-						
-					}
-				}
+				
+	//////////////soldierMove
+				SoldierMoving(dt);
+				soldier.pos.copy(movepos);
+				soldier.mesh.rotation.y = angle;
+				
+				
+				SoldierShooting();
+				ShootThrough();
+				checkAim();
 				
 				//玩家視角(帥)
 				if(isSwitch){
+					soldier.mesh.children[0].rotation.y = -Math.PI/2;
 					let cameraPos = new THREE.Vector3(-50,30,0);
 					soldier.mesh.children[1].localToWorld (cameraPos);
 					camera.position.copy (cameraPos);
@@ -1482,6 +1790,9 @@
 				if (state === 0) {
 					start.innerHTML = "";
 					prey.findTarget(flag);
+					
+					//setTimeout(soldierdown,500);
+					//soldier.pos.set(170,0,170);
 					//scene.add(rebir,rebir2);
 					setTimeout(cancel,3000);
 				}
@@ -1507,19 +1818,87 @@
 						
 						
 						scene.add(rebir);
-						rebir.position.set(-175,20,-170);
+						rebir.position.set(-200,20,-170);
 						scene.add(prey.mesh);
 						
 						prey.pos = rebir.position.clone();
+						prey.setSeekTarget(-180,20, -170);
+						setTimeout(preydown,500);
 						setTimeout(cancel,3000);
 						
 						
 					}
 					
 				}
+				renderer.clear(true);
 				 if(zoom)
 					renderer.render (hudScene, hudCamera); 
 				renderer.render(scene, camera);
+				
+				// 讓「帥蓋」方位永遠固定
+				if(!isSwitch){
+					soldier.mesh.children[0].quaternion.copy(
+						soldier.mesh.quaternion.clone().invert()
+					);
+				}
+				
+				// 讓「車蓋」方位永遠固定
+				prey.mesh.children[0].quaternion.copy(
+					prey.mesh.quaternion.clone().invert()
+				);
+				/*preditor.mesh.children[3].quaternion.copy(
+					preditor.mesh.quaternion.clone().invert()
+				);
+				defense.mesh.children[2].quaternion.copy(
+					defense.mesh.quaternion.clone().invert()
+				);
+				defenseR.mesh.children[2].quaternion.copy(
+					defenseR.mesh.quaternion.clone().invert()
+				);
+				defenseL.mesh.children[2].quaternion.copy(
+					defenseL.mesh.quaternion.clone().invert()
+				);
+
+				if (defenseR.fsm.state === "follow" && stop === true) {
+					defenseR.fsm.attack();
+					defense.fsm.attack();
+					defenseL.fsm.attack();
+				}
+				if (defenseR.fsm.state === "defense" && stop === false) {
+					defenseR.fsm.noattack();
+					defense.fsm.noattack();
+					defenseL.fsm.noattack();
+				}
+				*/
+				render();
+			}
+			function render() {
+
+					var WW = window.innerWidth;
+					var HH = window.innerHeight;
+					renderer.setScissorTest( true );
+
+					renderer.setViewport(0, 0, WW, HH);
+					camera.aspect = WW / HH;
+					camera.updateProjectionMatrix();
+					
+					renderer.setScissor(0, 0, WW, HH);
+					//renderer.clear();
+
+					//renderer.setViewport(0, 0, WW/2, HH);
+					//renderer.setScissor(0, 0, WW/2, HH);
+					renderer.render(scene, camera);
+					if(zoom)
+						renderer.render(hudScene,hudCamera);
+					renderer.setViewport(WW / 25, HH/2  , WW / 4, HH / 2);
+					renderer.setScissor(WW / 25, HH/2 , WW / 4, HH / 2);
+					
+					renderer.clear(true);  // important!
+					
+					renderer.render(sceneHUD, cameraHUD1);  // border
+					renderer.render(scene, cameraHUD2);
+
+					renderer.setScissorTest( false );
 			}
 		</script>
 	</body>

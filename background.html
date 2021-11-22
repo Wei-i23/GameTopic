@@ -10,63 +10,7 @@
 				position: absolute;
 				width: 100vw;
 			}
-			#btn {
-				position: absolute;
-				top: 300px;
-			}
-
-			#lifebtn {
-				position: absolute;
-				width: 10px;
-				height: 10px;
-				text-align: left;
-				
-			}
 			
-			#manu {
-				display: none;
-				width: 400px;
-				height: 200px;
-				margin-left: 10px;
-				background-color: #ffffe0;
-				border-radius: 30px;
-				text-align: left;
-				opacity: 0.5;
-			}
-			
-			#closeBtn {
-				margin-left: 320px;
-				margin-top : 150px;
-			}
-			
-
-			#start {
-				position: absolute;
-				top: 440px;
-				font-size: 60px;
-				width: 100%;
-				padding: 5px;
-				text-align: center;
-				color: #ffff00;
-			}
-			#end {
-				position: absolute;
-				top: 440px;
-				font-size: 60px;
-				width: 100%;
-				padding: 5px;
-				text-align: center;
-				color: #ffff00;
-			}
-			#restart {
-				position: absolute;
-				top: 500px;
-				font-size: 60px;
-				width: 100%;
-				padding: 5px;
-				text-align: center;
-				color: #ffff00;
-			}
 		</style>
 		
 		
@@ -113,13 +57,50 @@
 			
 			//蟲洞
 			var respawnPos,respawnPos1,tunnel,rebir,rebir2;
-		
+			
+			//tree
+			var trees = [],trees2 = [],trees3 = [],trees4 = [];
 			
 			
 			init();
 			animate();
 			
-			
+			function birth(){
+				var length_up = 16,width_up = 8;
+				var rr_up = 4;
+				var shape_up = new THREE.Shape();
+				
+				shape_up.moveTo(length_up/2,width_up/2);
+				shape_up.absarc(0,width_up/2,20,0,Math.PI*2,true);
+				
+				var holePath_up = new THREE.Path();
+				holePath_up.moveTo(length_up/2, width_up/2);
+				holePath_up.absarc(0, width_up/2, 15, 0, Math.PI * 2, true);
+				shape_up.holes.push(holePath_up);
+				
+				var extrudeSettings_up = {
+				steps: 1,
+				depth: 3, // extrude along +Z
+				bevelEnabled: false,
+			  };
+				
+				let loader = new THREE.TextureLoader()
+				loader.setCrossOrigin ("")
+				let map = loader.load ("https://i.imgur.com/u0tlqX2.png")
+				//map.wrapS = map.wrapT = THREE.WrapRepeating
+				//map.repeat.set (.1,.1)
+				var geometry = new THREE.ExtrudeGeometry(shape_up,extrudeSettings_up);
+				var material = new THREE.MeshLambertMaterial({
+					 map: map
+				});
+				var mesh = new THREE.Mesh(geometry, material);
+				//scene.add(mesh);
+			  
+				//mesh.position.set(-2,5,0);
+				//mesh.rotation.x = -Math.PI/2;
+				return mesh;
+			}
+			/*
 			function rebirth(inner,outside){
 				let loaderPortal = new THREE.TextureLoader();
 				loaderPortal.crossOrigin = "";
@@ -154,7 +135,7 @@
 				return respawnPos;
 				//respawnPos.position.set(-120, 17, -100);
 			}
-			
+			*/
 			function init() {
 				
 				scene = new THREE.Scene();
@@ -170,38 +151,36 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.setClearColor(0x888888);
-
-
+				
 				let controls = new OrbitControls(camera, renderer.domElement);
 				document.body.appendChild(renderer.domElement);
 			
 				var gridXZ = new THREE.GridHelper(400, 40, "red", "white");
-				scene.add(gridXZ);
+				//scene.add(gridXZ);
 				
-				let wall = new THREE.Group();
-				let wallUp = new THREE.Mesh(new THREE.PlaneGeometry(200,100),
-								new THREE.MeshBasicMaterial({
-									color: 'green',
-									transparent: true,
-									opacity: 0.5,
-									side: THREE.DoubleSide,
-								}));
-				let wallLeft = wallUp.clone();
-				wallLeft.rotation.y = Math.PI/2;
-				let wallRight = wallLeft.clone();
-				let wallBottom = wallUp.clone();
+				let light = new THREE.PointLight(0xffffff);
+				light.position.set(100, 300, 200);
+				scene.add(light);
 				
-				wall.add(wallUp,wallLeft,wallRight,wallBottom);
+				//  GROUND
+
+				var gt = new THREE.TextureLoader().load( 'https://i.imgur.com/hyZYHl2.jpg' );
+				var gg = new THREE.PlaneBufferGeometry( 400, 400 );
+				var gm = new THREE.MeshBasicMaterial( { color: 0xffffff, map: gt ,side: THREE.DoubleSide} );
+
+				var ground = new THREE.Mesh( gg, gm );
+				ground.rotation.x = - Math.PI / 2;
+				ground.material.map.repeat.set( 60, 60 );
+				ground.material.map.wrapS = THREE.RepeatWrapping;
+				ground.material.map.wrapT = THREE.RepeatWrapping;
+				// note that because the ground does not cast a shadow, .castShadow is left false
+				ground.receiveShadow = true;
+				scene.add(ground);
 				
-				wallUp.position.set(0,0,-100);
-				wallLeft.position.set(-100,0,0);
-				wallRight.position.set(100,0,0);
-				wallBottom.position.set(0,0,100);
-				wall.position.y = 50;
-				
-				let ground = new THREE.Group();
+			
+				let grd = new THREE.Group();
 				let groundE = new THREE.Mesh(
-					new THREE.PlaneGeometry(40, 40, 32),
+					new THREE.PlaneGeometry(50, 50, 32),
 					new THREE.MeshBasicMaterial({
 						color: 0xff0000,
 						transparent: true,
@@ -214,16 +193,231 @@
 				
 				let groundP = groundE.clone();
 				
-				ground.add(groundE,groundP);
-				groundE.position.set(-80,0,-80);
-				groundP.position.set(80,0,80);
+				grd.add(groundE,groundP);
+				groundE.position.set(-175,0.5,-175);
+				groundP.position.set(175,0.5,175);
 				
-				scene.add(wall,ground);
+				scene.add(grd);
+				
+				//background
+				let bg_left = back();
+				let bg_front = back();
+				let bg_right = back();
+				let bg_down = back();
+				scene.add(bg_left,bg_front,bg_right,bg_down);
+				bg_front.rotation.y = -Math.PI/2;
+				bg_right.rotation.y = Math.PI;
+				bg_down.rotation.y = Math.PI/2;
+				
+				let box_a = gasBox();
+				let box_b = gasBox();
+				let box_c = gasBox();
+				
+				let box_d = gasBox();
+				let box_e = gasBox();
+				let box_f = gasBox();
+				
+				let box_g = gasBox();
+				let box_h = gasBox();
+				let box_i = gasBox();
+				
+				let box_j = box_g.clone();
+				let box_k = box_h.clone();
+				let box_l = box_i.clone();
+				
+				scene.add(box_a,box_b,box_c,box_d,box_e,box_f,box_g,box_h,box_i,box_j,box_k,box_l);
+				
+				box_b.position.set(0,0,-100);
+				box_c.position.set(0,0,-200);
+				
+				box_d.position.set(400,0,-300);
+				box_e.position.set(400,0,-200);
+				box_f.position.set(400,0,-100);
+				
+				box_g.position.set(-210,0,-400);
+				box_h.position.set(-110,0,-400);
+				box_i.position.set(-10,0,-400);
+				
+				box_j.position.set(-285,0,0);
+				box_k.position.set(-185,0,0);
+				box_l.position.set(-85,0,0);
+				
+				box_g.rotation.y = Math.PI/2;
+				box_h.rotation.y = Math.PI/2;
+				box_i.rotation.y = Math.PI/2;
+				
+				box_j.rotation.y = Math.PI/2;
+				box_k.rotation.y = Math.PI/2;
+				box_l.rotation.y = Math.PI/2;
+				
+				////蟲洞//////
+				rebir = birth();
+				rebir2 = rebir.clone();
+				rebir.rotation.y = Math.PI/2;
+				rebir2.rotation.y = Math.PI/2;
+				
+				scene.add(rebir,rebir2);
+				rebir.position.set(-200,25,-130);
+				rebir2.position.set(200,25,130)
+				
+				tree();
+			}
+			
+			function back(){
+			
+				let loader = new THREE.TextureLoader();
+					loader.crossOrigin = "";
+					let tex = loader.load(
+						"https://i.imgur.com/qoaV6j8.jpg"
+					);
+				
+				let wall = new THREE.Mesh(new THREE.PlaneGeometry(600,300),
+							new THREE.MeshBasicMaterial({
+								map: tex
+								//side: THREE.DoubleSide
+							}));
+				wall.rotation.y = Math.PI/2;
+				wall.position.set(-300,150,0);
+				
+				
+					
+				let gt_og = new THREE.TextureLoader().load( 'https://i.imgur.com/hyZYHl2.jpg' );
+				let gg_og = new THREE.PlaneBufferGeometry( 600, 100 );
+				let gm_og = new THREE.MeshBasicMaterial( { color: 0xffffff, map: gt_og ,side: THREE.DoubleSide} );
+
+				let out_ground = new THREE.Mesh( gg_og, gm_og );
+				
+				out_ground.material.map.repeat.set( 60, 60 );
+				out_ground.material.map.wrapS = THREE.RepeatWrapping;
+				out_ground.material.map.wrapT = THREE.RepeatWrapping;
+				// note that because the ground does not cast a shadow, .castShadow is left false
+				out_ground.receiveShadow = true;
+				
+				out_ground.rotation.x = Math.PI/2;
+				out_ground.rotation.z = Math.PI/2;
+				out_ground.position.set(-250,0,0);
+				
+				let bg = new THREE.Group();
+				bg.add(wall,out_ground);
+				return bg;
+				//scene.add(wall,out_ground);
+				
+			}
+			function tree(){
+				let loader = new THREE.TextureLoader();
+				loader.crossOrigin = '';
+				var texture = loader.load('https://i.imgur.com/omX5Drl.png');
+				
+				var texMat = new THREE.MeshBasicMaterial({
+							map: texture,
+							//transparent: true
+							alphaTest: 0.5
+				});
+				
+				tree = new THREE.Mesh(new THREE.PlaneGeometry(40, 80), texMat);
+				
+				for (let i = 0; i < 10; i++) {
+					let tt = tree.clone();
+					tt.position.set (-250, 40, (-1+Math.random()*3)*180)
+					trees.push (tt)
+					scene.add (tt)
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt2 = tree.clone();
+					tt2.position.set ((-1+Math.random()*3)*180, 40, -250)
+					trees2.push (tt2)
+					scene.add (tt2);
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt3 = tree.clone();
+					tt3.position.set (250, 40, (-1+Math.random()*3)*180)
+					trees3.push (tt3)
+					scene.add (tt3);
+				}
+				
+				for (let i = 0; i < 10; i++) {
+					let tt4 = tree.clone();
+					tt4.position.set ((-1+Math.random()*3)*180, 40, 250)
+					trees4.push (tt4)
+					scene.add (tt4);
+				}
+			}
+			
+			function gasBox(){
+				let loader1 = new THREE.TextureLoader();
+				loader1.crossOrigin = "";
+				let texture1 = loader1.load("https://i.imgur.com/XlAVV7B.jpg");
+				texture1.wrapS = THREE.RepeatWrapping;
+				texture1.wrapT = THREE.RepeatWrapping;
+				texture1.repeat.set(2, 1);
+				var texMat1 = new THREE.MeshBasicMaterial({
+					map: texture1,
+					side: THREE.DoubleSide,
+				});
+				let mesh1 = new THREE.Mesh(new THREE.CircleGeometry(10, 32),texMat1);
+				mesh1.rotation.x = -Math.PI / 2;
+				//mesh1.position.set(center.x, center.y + 10, center.z);
+				
+				
+				
+				let loader = new THREE.TextureLoader();
+					loader.crossOrigin = "";
+					let texture = loader.load(
+						"https://i.imgur.com/XlAVV7B.jpg"
+					);
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set(5, 1);
+
+				var texMat = new THREE.MeshBasicMaterial({
+						map: texture,
+						side: THREE.DoubleSide,
+				});
+				var box1 = new THREE.Mesh(
+						new THREE.CylinderGeometry(10, 10 , 30, 64),
+						texMat
+				);
+				box1.add(mesh1);
+				mesh1.position.y = 15.3;
+				var box2 = box1.clone();
+				var box3 = box1.clone();
+				var box4 = box1.clone();
+				var box5 = box1.clone();
+				var box6 = box1.clone();
+				var box7 = box1.clone();
+				var box8 = box1.clone();
+				var box9 = box1.clone();
+				var box10 = box1.clone();
+				
+				let box = new THREE.Group();
+				box.add(box1,box2,box3,box4,box5);
+				
+				
+				box1.position.set(-200,15,190);
+				box2.position.set(-200,15,170);
+				box3.position.set(-200,15,150);
+				box4.position.set(-200,15,130);
+				box5.position.set(-200,15,110);
+				
+				return box;
+				//scene.add(box);
 			}
 			
 			function animate() {
 				requestAnimationFrame(animate);
 				renderer.render(scene, camera);
+				
+				rebir.rotation.z += 0.05;
+				rebir2.rotation.z += 0.05;
+				
+				let cameraRoot = camera.position.clone();
+				cameraRoot.y = 0;
+				trees.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees2.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees3.forEach (function(t) {t.lookAt (cameraRoot)});
+				trees4.forEach (function(t) {t.lookAt (cameraRoot)});
 			}
 		</script>
 	</body>

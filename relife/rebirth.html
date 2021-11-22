@@ -997,7 +997,8 @@ function animate() {
 			scene.add(rebir);
 			rebir.position.set(-120,20,-100);
 			scene.add(prey.mesh);
-			
+		
+			scene.add(rebir);
 			prey.pos = rebir.position.clone();
 			prey.setSeekTarget(-100,20, -100);
 			setTimeout('preydown()',500);
