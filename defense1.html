@@ -17,10 +17,72 @@
   bottom:0px;
 }
 
+
 body {
   overflow: hidden;
 }
+<!--
+#restart {
+	position: absolute;
+	width: 1300px;
+	height: 1100px;
+	font-size: 60px;
+	padding: 5px;
+	text-align: center;
+	color: #ffff00;
+	font-weight:bold;
+	backdrop-filter: blur(5px);
+	z-index: 98;
+}-->
+@keyframes typing { 
+	 from {
+          width: 0;
+        }
+        to {
+          width: 150px;
+        }
+      }
+} 
+@keyframes caret { 
+	 from {
+          border-right-color: 'black';
+        }
+        to {
+          border-right-color: transparent;
+        }
+	
+}
 
+#loseWord{
+	position: absolute;
+	border-right: solid 3px rgba(0, 255, 0, .75);
+    white-space: nowrap;
+    overflow: hidden;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 28px;
+    color: 0x000000;
+    right: 10px;
+	animation: typing 5s steps(9, end) 1s 1 normal both, 
+	caret 600ms steps(9, end) infinite;
+}
+			
+
+#restartWord{
+	top: 50px;
+	left:100px;
+	position: absolute;
+	display:none;
+	font-size:30px;
+	font-family:Microsoft JhengHei;
+	width: 21em;height:1.25em;
+	border-right:1px solid;
+	animation: 
+	typing 3.5s steps(42,end),
+	caret 0.5s step-end infinite;
+	word-break: break-all;
+	overflow: hidden;
+	
+}
 
 </style>
 </head>
@@ -29,8 +91,15 @@ body {
 	Protect-steer
 	</div>
 	<div id = "info">
-	<p id = 'defenseState'></p>
+	
 	</div>
+	<!--<div id="restart"></div>
+			<!--<div id ="tele">
+				<img src = "picture/tele.png" width = "700" height = "600"/>
+			</div>-->
+	<div id = "loseWord">You lose.</div>	
+	<div id = "restartWord">重新開始請按Restart;結束請按End</div>
+	
 
 <script src="state-machine.js"></script>	
 <script src="https://threejs.org/build/three.min.js"></script>
@@ -474,6 +543,9 @@ function onDocumentMouseDown(event) {
 	}
 }
 
+function restartWordRun(){
+	document.getElementById("restartWord").style.display = "block";
+}
 function animate() {
 
 	keyboard.update();
@@ -516,6 +588,7 @@ function animate() {
 		defenseL.fsm.noattack();
 		capturer.fsm.noattack();
 	}
+	setTimeout(restartWordRun,3500);
 }
 
 

@@ -1,10 +1,16 @@
 
-
+var close = false;
 function life(){
-	
-	document.getElementById("manu").style.display = "block";
+	close = !close;
+	if(close == false)
+		document.getElementById("manu").style.display = "block";
+	else
+		document.getElementById("manu").style.display = "none";
 }
-function lifeclose(){
-	
-	document.getElementById("manu").style.display = "none";
+function nextButton(){
+	document.getElementById("word").style.display = "none";
+	document.getElementById("nextWord").style.display = "block";
+}
+function startGame(){
+	document.getElementById("introduction").style.display = "none";
 }

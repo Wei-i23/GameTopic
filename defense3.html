@@ -341,6 +341,10 @@ var point;
 var stop = false;
 var angle;
 
+var movepos = new THREE.Vector3(100,0,100);
+var movevel = new THREE.Vector3();
+var moveforce = new THREE.Vector3();
+var angle,power;
 
 init();
 animate();
@@ -582,7 +586,9 @@ function init() {
 	scene.obstacles = [];
 	//scene.obstacles.push ( new Obstacle (new THREE.Vector3(10,0,30), 20) )
   
-	
+	//戰士移動
+	power = 5.0;
+	angle = 0.0;
 }
 
 function onDocumentMouseDown(event) {
@@ -602,22 +608,41 @@ function onDocumentMouseDown(event) {
 	}
 }
 
-function soldierMove() {
-	keyboard.update();
-
-	if (keyboard.pressed("left")) {
-		soldier.setSeekTarget(soldier.pos.x - 10, 0, soldier.pos.z);
-	}
-	if (keyboard.pressed("right")) {
-		soldier.setSeekTarget(soldier.pos.x + 10, 0, soldier.pos.z);
+function soldierMove(dt) {
+	
+	//var dis = soldier.pos.distanceTo(nearObstacleSold().mesh.position);
+	
+	//console.log(soldier.mesh.children[1].position);
+	
+	if(movevel.length() > 0){
+		angle = 1.5*Math.PI + Math.atan2(movevel.x,movevel.z);
 	}
 	if (keyboard.pressed("up")) {
-		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z - 10);
+		power *= 1.2;
+	}
+	if (keyboard.pressed("down")) {
+		power /= 1.2;
+		
+	}
+	
+	
+	power = Math.clamp (power, 0, 50.0);
+	
+	var angle_thrust = angle;
+	if (keyboard.pressed("left")) {
+		 angle_thrust += 0.8;
+	}
+	if (keyboard.pressed("right")) {
+		angle_thrust -= 0.8;
+		
 	}
 
-	if (keyboard.pressed("down")) {
-		soldier.setSeekTarget(soldier.pos.x, 0, soldier.pos.z + 10);
-	}
+	var thrust = new THREE.Vector3(1,0,0).multiplyScalar(power).applyAxisAngle (new THREE.Vector3(0,1,0), angle_thrust);
+	moveforce.copy (thrust);
+	moveforce.add(movevel.clone().multiplyScalar(-2))
+	movevel.add(moveforce.clone().multiplyScalar(dt));
+	movepos.add(movevel.clone().multiplyScalar(dt));
+	
 }
 
 
@@ -637,7 +662,9 @@ function animate() {
 	
 	capturer.update(dt);
 	soldier.update(0.05);
-	soldierMove();
+	soldierMove(dt);
+    soldier.pos.copy(movepos);
+    soldier.mesh.rotation.y = angle;
 	
 	agents.forEach(function(agent) {
 		defenseR.update(dt);

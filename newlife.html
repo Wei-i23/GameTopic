@@ -795,7 +795,7 @@
 				);
 				//////////////////////////////////////////////////////////////////////////////////////////
 				var cubeMap = loadCubemap();
-				scene.background = cubeMap;
+				//scene.background = cubeMap;
 
 				//paintFloor();
 				paintBase();
@@ -1402,7 +1402,7 @@
 					flag.position.set(0,8,0);
 				
 					let dt = clock.getDelta();
-					prey.pos.set(-175,0,-175);
+					//prey.pos.set(-175,0,-175);
 					preditor.pos.set(-175,0,-175);
 					prey.fsm.state = "search";
 					prey.update(dt,time);
